@@ -9,7 +9,7 @@ const defaultProducts = [
     description: "Rak ini cocok digunakan di berbagai lingkungan, baik itu di rumah, kantor, gudang, toko, atau tempat lainnya. Dengan desain yang serbaguna.",
     image: "img/rak.jpg",
     affiliateLink: "https://s.shopee.co.id/7po7yu5cqu",
-    category: "Furniture "
+    category: "Furniture"
   },
   {
     id: 2,
