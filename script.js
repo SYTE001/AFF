@@ -4,10 +4,10 @@
 const defaultProducts = [
   {
     id: 1,
-    name: "Xiaomi Redmi Buds 4 Lite TWS Earbuds",
-    price: "Rp 129.000",
-    description: "TWS earbuds dengan koneksi Bluetooth 5.3, bass yang kuat, dan battery life hingga 20 jam. Ringan hanya 3.8 gram per bud, cocok dipakai seharian.",
-    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
+    name: "Rak Dapur Dorong ",
+    price: "Rp38.700",
+    description: "Rak ini cocok digunakan di berbagai lingkungan, baik itu di rumah, kantor, gudang, toko, atau tempat lainnya. Dengan desain yang serbaguna, rak dorong kami dapat digunakan untuk menyimpan dan mengatur berbagai jenis barang, seperti peralatan dapur, peralatan kerja, persediaan kantor, barang elektronik, atau bahkan produk dalam toko.",
+    image: "img/redmi-buds.png",
     affiliateLink: "https://s.shopee.co.id/7po7yu5cqu",
     category: "Elektronik"
   },
@@ -16,7 +16,7 @@ const defaultProducts = [
     name: "Tumbler Thermos Stainless 1 Liter Anti Bocor",
     price: "Rp 85.000",
     description: "Botol minum stainless steel double wall yang bisa menjaga minuman tetap dingin 24 jam dan panas 12 jam. Cocok untuk aktivitas outdoor dan kerja.",
-    image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=600&q=80",
+    image: "img/redmi-buds.png",
     affiliateLink: "https://shope.ee/example-tumbler",
     category: "Lifestyle"
   },
@@ -25,7 +25,7 @@ const defaultProducts = [
     name: "Lampu LED Ring Light 10 Inch + Tripod",
     price: "Rp 95.000",
     description: "Ring light 10 inci dengan 3 mode cahaya dan 10 level kecerahan. Paket sudah termasuk tripod adjustable hingga 150 cm. Ideal untuk konten kreator.",
-    image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80",
+    image: "img/redmi-buds.png",
     affiliateLink: "https://shope.ee/example-ringlight",
     category: "Elektronik"
   },
@@ -34,7 +34,7 @@ const defaultProducts = [
     name: "Tas Ransel Laptop Anti Air Slim 20L",
     price: "Rp 175.000",
     description: "Ransel bahan waterproof dengan kompartemen khusus laptop hingga 15.6 inci. Dilengkapi port USB charging eksternal dan desain ergonomis.",
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80",
+    image: "img/redmi-buds.png",
     affiliateLink: "https://shope.ee/example-tas",
     category: "Fashion"
   },
@@ -43,7 +43,7 @@ const defaultProducts = [
     name: "Mechanical Keyboard TKL RGB Wireless",
     price: "Rp 299.000",
     description: "Keyboard mekanikal tenkeyless dengan switch blue (clicky), backlight RGB 18 mode, koneksi 2.4G wireless dan kabel. Battery 3000mAh awet hingga 3 minggu.",
-    image: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=600&q=80",
+    image: "img/redmi-buds.png",
     affiliateLink: "https://shope.ee/example-keyboard",
     category: "Elektronik"
   },
@@ -52,7 +52,7 @@ const defaultProducts = [
     name: "Skincare Set Vitamin C Brightening Serum",
     price: "Rp 115.000",
     description: "Serum vitamin C 20% yang membantu mencerahkan kulit, meratakan warna kulit, dan mengurangi bekas jerawat. Formula ringan dan cepat meresap.",
-    image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&q=80",
+   image: "img/redmi-buds.png",
     affiliateLink: "https://shope.ee/example-serum",
     category: "Skincare"
   }
