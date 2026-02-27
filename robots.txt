@@ -1,0 +1,2 @@
+User-agent: *
+Disallow: /portal-x9k2.html

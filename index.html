@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PilihCerdas – Rekomendasi Produk Terbaik</title>
+  <meta name="description" content="Kurasi produk viral & affordable yang sudah diseleksi berdasarkan rating, value, dan kualitas terbaik." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="index-page">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <div class="nav-logo">Pilih<span>Cerdas</span></div>
+      <ul class="nav-links">
+        <li><a href="#products">Produk</a></li>
+        <li><a href="#about">Tentang</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Diperbarui setiap minggu
+      </div>
+
+      <h1>Rekomendasi Barang Viral &amp; Affordable yang <em>Worth It</em></h1>
+
+      <p class="hero-sub">
+        Semua produk sudah dikurasi berdasarkan rating tinggi, ulasan pembeli nyata, dan nilai terbaik untuk uang Anda.
+      </p>
+
+      <button class="hero-cta" id="hero-cta">
+        Lihat Rekomendasi
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <polyline points="19 12 12 19 5 12"/>
+        </svg>
+      </button>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-num" id="stat-products">6</div>
+          <div class="stat-label">Produk Pilihan</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">4.7★</div>
+          <div class="stat-label">Rata-rata Rating</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Sudah Diverifikasi</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS SECTION -->
+  <section id="products" class="products-section">
+    <div class="section-header">
+      <span class="section-tag">Produk Pilihan</span>
+      <h2 class="section-title">Semua Worth It, Harga Bersahabat</h2>
+      <p class="section-desc">Klik "Cek di Shopee" untuk melihat harga real-time dan promo hari ini.</p>
+    </div>
+
+    <div class="filter-pills" id="filter-pills">
+      <!-- Rendered by JS -->
+    </div>
+
+    <div class="product-grid" id="product-grid">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <!-- ABOUT SECTION -->
+  <section id="about" class="about-section">
+    <div class="about-inner">
+      <div class="about-icon">🎯</div>
+      <h2>Kenapa Percaya Kami?</h2>
+      <p>
+        <strong>PilihCerdas</strong> bukan marketplace, bukan blog biasa. Kami hanya berbagi produk yang benar-benar kami nilai layak dibeli — berdasarkan rating tinggi, ulasan organik dari pembeli nyata, dan perbandingan harga terbaik di Shopee. Tidak ada produk bayaran, tidak ada endorse asal-asalan. Hanya rekomendasi jujur yang membantu Anda belanja lebih cerdas.
+      </p>
+
+      <div class="about-features">
+        <div class="about-feat">
+          <span class="icon">✅</span>
+          Rating di atas 4.5
+        </div>
+        <div class="about-feat">
+          <span class="icon">💰</span>
+          Harga terjangkau
+        </div>
+        <div class="about-feat">
+          <span class="icon">🔍</span>
+          Dikurasi manual
+        </div>
+        <div class="about-feat">
+          <span class="icon">🛡️</span>
+          No spam, no ads
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">Pilih<span>Cerdas</span></div>
+      <p class="footer-disclaimer">
+        Beberapa link di website ini merupakan link affiliate. Saya bisa mendapatkan komisi tanpa biaya tambahan untuk Anda.
+      </p>
+      <div class="footer-divider"></div>
+      <div class="footer-contact">
+        Ada pertanyaan? Hubungi kami di <a href="mailto:hello@pilihcerdas.id">hello@pilihcerdas.id</a>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-copy">© 2024 PilihCerdas. Dibuat dengan ❤️ untuk belanja lebih cerdas.</div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    // Update stats counter
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('stat-products');
+      if (el) el.textContent = getProducts().length;
+    });
+  </script>
+
+</body>
+</html>
