@@ -5,20 +5,20 @@ const defaultProducts = [
   {
     id: 1,
     name: "Rak Dapur Dorong ",
-    price: "Rp38.700",
-    description: "Rak ini cocok digunakan di berbagai lingkungan, baik itu di rumah, kantor, gudang, toko, atau tempat lainnya. Dengan desain yang serbaguna, rak dorong kami dapat digunakan untuk menyimpan dan mengatur berbagai jenis barang, seperti peralatan dapur, peralatan kerja, persediaan kantor, barang elektronik, atau bahkan produk dalam toko.",
-    image: "img/redmi-buds.png",
+    price: "Rp 38.700",
+    description: "Rak ini cocok digunakan di berbagai lingkungan, baik itu di rumah, kantor, gudang, toko, atau tempat lainnya. Dengan desain yang serbaguna.",
+    image: "img/rak.jpg",
     affiliateLink: "https://s.shopee.co.id/7po7yu5cqu",
-    category: "Elektronik"
+    category: "Furniture "
   },
   {
     id: 2,
-    name: "Tumbler Thermos Stainless 1 Liter Anti Bocor",
-    price: "Rp 85.000",
-    description: "Botol minum stainless steel double wall yang bisa menjaga minuman tetap dingin 24 jam dan panas 12 jam. Cocok untuk aktivitas outdoor dan kerja.",
-    image: "img/redmi-buds.png",
-    affiliateLink: "https://shope.ee/example-tumbler",
-    category: "Lifestyle"
+    name: "Rak Sepatu X",
+    price: "Rp 29.400",
+    description: "Rak sepatu. Tersedia beberapa tingat 2/3/4/5/6. cocok ditaruh di mana saja, bisa di toilet, bawah meja, dekat pintu, bawah meja kerja dll.",
+    image: "img/rak1.png",
+    affiliateLink: "https://s.shopee.co.id/6KzKEG7ITg",
+    category: "Furniture"
   },
   {
     id: 3,
