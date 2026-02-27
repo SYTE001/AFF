@@ -59,23 +59,10 @@ const defaultProducts = [
 ];
 
 /* ================================
-   STORAGE HELPERS
+   PRODUCT HELPERS
 ================================ */
-const STORAGE_KEY = 'affiliate_products';
-
 function getProducts() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch (e) {}
-  }
   return defaultProducts;
-}
-
-function saveProducts(products) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 }
 
 /* ================================
@@ -83,7 +70,6 @@ function saveProducts(products) {
 ================================ */
 const icons = {
   shopee: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
-  arrow: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`,
   box: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`
 };
 
@@ -173,6 +159,53 @@ function initHeroCta() {
 }
 
 /* ================================
+   DARK MODE TOGGLE
+================================ */
+function initDarkMode() {
+  const toggle = document.getElementById('theme-toggle');
+  if (!toggle) return;
+
+  // Load saved preference, fallback to system preference
+  const saved = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved ? saved === 'dark' : prefersDark;
+
+  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+  updateToggleIcon(toggle, isDark);
+
+  toggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = !current;
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+    updateToggleIcon(toggle, next);
+  });
+}
+
+function updateToggleIcon(btn, isDark) {
+  btn.innerHTML = isDark
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+}
+
+/* ================================
+   PRELOADER
+================================ */
+function initPreloader() {
+  const preloader = document.getElementById('preloader');
+  if (!preloader) return;
+
+  // Hide after animation completes
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      preloader.classList.add('hide');
+      preloader.addEventListener('transitionend', () => preloader.remove(), { once: true });
+    }, 1800);
+  });
+}
+
+/* ================================
    HELPER: ESCAPE HTML
 ================================ */
 function escapeHtml(str) {
@@ -186,204 +219,18 @@ function escapeHtml(str) {
 }
 
 /* ================================
-   INIT (index.html)
+   INIT
 ================================ */
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.classList.contains('index-page')) {
     buildFilters();
     renderProducts();
     initHeroCta();
+    initDarkMode();
+    initPreloader();
+
+    // Update stats counter
+    const el = document.getElementById('stat-products');
+    if (el) el.textContent = getProducts().length;
   }
 });
-
-
-/* ================================================================
-   ADMIN SYSTEM — only runs on admin.html
-================================================================ */
-const ADMIN_PASSWORD = 'admin123';
-const SESSION_KEY = 'affiliate_admin_session';
-
-/* --- Auth Helpers --- */
-function isLoggedIn() {
-  return sessionStorage.getItem(SESSION_KEY) === '1';
-}
-
-function login(pw) {
-  if (pw === ADMIN_PASSWORD) {
-    sessionStorage.setItem(SESSION_KEY, '1');
-    return true;
-  }
-  return false;
-}
-
-function logout() {
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
-
-/* --- Toast Notification --- */
-let toastTimer;
-function showToast(msg, type = 'success') {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
-}
-
-/* --- Admin: Render Table --- */
-function renderAdminTable() {
-  const tbody = document.getElementById('products-tbody');
-  const countEl = document.getElementById('product-count');
-  if (!tbody) return;
-
-  const products = getProducts();
-  if (countEl) countEl.textContent = products.length;
-
-  if (products.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">Belum ada produk. Tambahkan produk pertama Anda.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = products.map(p => `
-    <tr>
-      <td class="td-img">
-        <img src="${escapeHtml(p.image)}" alt="" onerror="this.src='https://via.placeholder.com/52'">
-      </td>
-      <td class="td-name">${escapeHtml(p.name)}</td>
-      <td class="td-price">${escapeHtml(p.price)}</td>
-      <td class="td-cat"><span class="badge">${escapeHtml(p.category || '—')}</span></td>
-      <td><a href="${escapeHtml(p.affiliateLink)}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem;color:var(--shopee);font-weight:500">Lihat Link ↗</a></td>
-      <td class="td-actions">
-        <button class="btn btn-secondary btn-sm" onclick="openEditModal(${p.id})">Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Hapus</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-/* --- Modal --- */
-function openModal(title) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-overlay').classList.add('active');
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('active');
-  document.getElementById('product-form').reset();
-  document.getElementById('edit-id').value = '';
-}
-
-/* --- Add / Edit Modal --- */
-function openAddModal() {
-  document.getElementById('edit-id').value = '';
-  document.getElementById('product-form').reset();
-  openModal('Tambah Produk Baru');
-}
-
-function openEditModal(id) {
-  const products = getProducts();
-  const p = products.find(p => p.id == id);
-  if (!p) return;
-
-  document.getElementById('edit-id').value = p.id;
-  document.getElementById('f-name').value = p.name;
-  document.getElementById('f-price').value = p.price;
-  document.getElementById('f-description').value = p.description;
-  document.getElementById('f-image').value = p.image;
-  document.getElementById('f-link').value = p.affiliateLink;
-  document.getElementById('f-category').value = p.category || '';
-
-  openModal('Edit Produk');
-}
-
-/* --- Save Product (Add or Edit) --- */
-function saveProduct(e) {
-  e.preventDefault();
-  const products = getProducts();
-
-  const id = document.getElementById('edit-id').value;
-  const name = document.getElementById('f-name').value.trim();
-  const price = document.getElementById('f-price').value.trim();
-  const description = document.getElementById('f-description').value.trim();
-  const image = document.getElementById('f-image').value.trim();
-  const affiliateLink = document.getElementById('f-link').value.trim();
-  const category = document.getElementById('f-category').value.trim();
-
-  if (!name || !price || !affiliateLink) {
-    showToast('Nama, harga, dan link affiliate wajib diisi!', 'error');
-    return;
-  }
-
-  if (id) {
-    // Edit existing
-    const idx = products.findIndex(p => p.id == id);
-    if (idx > -1) {
-      products[idx] = { ...products[idx], name, price, description, image, affiliateLink, category };
-      showToast('Produk berhasil diperbarui! ✓');
-    }
-  } else {
-    // Add new
-    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-    products.push({ id: newId, name, price, description, image, affiliateLink, category });
-    showToast('Produk berhasil ditambahkan! ✓');
-  }
-
-  saveProducts(products);
-  closeModal();
-  renderAdminTable();
-}
-
-/* --- Delete Product --- */
-function deleteProduct(id) {
-  if (!confirm('Yakin ingin menghapus produk ini?')) return;
-  const products = getProducts().filter(p => p.id != id);
-  saveProducts(products);
-  renderAdminTable();
-  showToast('Produk dihapus.', 'error');
-}
-
-/* --- Admin Init --- */
-function initAdmin() {
-  if (!document.body.classList.contains('admin-page')) return;
-
-  const loginSection = document.getElementById('login-section');
-  const dashSection = document.getElementById('dashboard-section');
-
-  if (isLoggedIn()) {
-    loginSection.style.display = 'none';
-    dashSection.style.display = 'block';
-    renderAdminTable();
-  } else {
-    loginSection.style.display = 'flex';
-    dashSection.style.display = 'none';
-  }
-
-  // Login form
-  const loginForm = document.getElementById('login-form');
-  loginForm?.addEventListener('submit', e => {
-    e.preventDefault();
-    const pw = document.getElementById('admin-password').value;
-    if (login(pw)) {
-      loginSection.style.display = 'none';
-      dashSection.style.display = 'block';
-      renderAdminTable();
-    } else {
-      document.getElementById('login-error').style.display = 'block';
-      document.getElementById('login-error').textContent = 'Password salah. Coba lagi.';
-    }
-  });
-
-  // Product form
-  document.getElementById('product-form')?.addEventListener('submit', saveProduct);
-
-  // Modal close
-  document.getElementById('modal-overlay')?.addEventListener('click', e => {
-    if (e.target === e.currentTarget) closeModal();
-  });
-}
-
-document.addEventListener('DOMContentLoaded', initAdmin);

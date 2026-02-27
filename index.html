@@ -6,25 +6,29 @@
   <title>PilihCerdas – Rekomendasi Produk Terbaik</title>
   <meta name="description" content="Kurasi produk viral & affordable yang sudah diseleksi berdasarkan rating, value, dan kualitas terbaik." />
   <link rel="stylesheet" href="style.css" />
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-D03QNSQJG4"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-D03QNSQJG4');
-</script>
 </head>
 <body class="index-page">
+
+  <!-- PRELOADER -->
+  <div id="preloader" class="preloader">
+    <div class="preloader-inner">
+      <div class="preloader-logo">Pilih<span>Cerdas</span></div>
+      <div class="preloader-tag">BEST CHOICE</div>
+      <div class="preloader-bar"><div class="preloader-fill"></div></div>
+    </div>
+  </div>
 
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="navbar-inner">
       <div class="nav-logo">Pilih<span>Cerdas</span></div>
-      <ul class="nav-links">
-        <li><a href="#products">Produk</a></li>
-        <li><a href="#about">Tentang</a></li>
-      </ul>
+      <div class="nav-right">
+        <ul class="nav-links">
+          <li><a href="#products">Produk</a></li>
+          <li><a href="#about">Tentang</a></li>
+        </ul>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+      </div>
     </div>
   </nav>
 
@@ -131,13 +135,6 @@
   </footer>
 
   <script src="script.js"></script>
-  <script>
-    // Update stats counter
-    document.addEventListener('DOMContentLoaded', () => {
-      const el = document.getElementById('stat-products');
-      if (el) el.textContent = getProducts().length;
-    });
-  </script>
 
 </body>
 </html>
