@@ -8,7 +8,7 @@ const defaultProducts = [
     price: "Rp 129.000",
     description: "TWS earbuds dengan koneksi Bluetooth 5.3, bass yang kuat, dan battery life hingga 20 jam. Ringan hanya 3.8 gram per bud, cocok dipakai seharian.",
     image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80",
-    affiliateLink: "https://shope.ee/example-buds",
+    affiliateLink: "https://s.shopee.co.id/7po7yu5cqu",
     category: "Elektronik"
   },
   {
