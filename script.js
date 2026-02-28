@@ -86,7 +86,8 @@ async function fetchProductsFromSheet() {
   }
 
   try {
-    const response = await fetch(SHEET_CSV_URL);
+    const PROXY = 'https://corsproxy.io/?';
+    const response = await fetch(PROXY + encodeURIComponent(SHEET_CSV_URL));
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const data = await response.text();
 
