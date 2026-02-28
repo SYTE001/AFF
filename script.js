@@ -80,14 +80,23 @@ const defaultProducts = [
 ================================ */
 async function fetchProductsFromSheet() {
   // Jika URL belum diisi, pakai data default
-  if (!SHEET_CSV_URL || SHEET_CSV_URL === 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSopEemVVM5WpVfAtMPhp00uSHjRObIYxcX94kvHmPON4SN6_yTJVf788KYVeCB9KlMy4iul19GnSKj/pub?output=csv') {
+  if (!SHEET_CSV_URL || SHEET_CSV_URL === 'PASTE_LINK_CSV_ANDA_DI_SINI') {
     console.info('[AFF] Google Sheets belum dikonfigurasi. Menggunakan data default.');
     return defaultProducts;
   }
 
   try {
-    const PROXY = 'https://corsproxy.io/?';
-    const response = await fetch(PROXY + encodeURIComponent(SHEET_CSV_URL));
+    // Coba fetch langsung dulu (tanpa proxy)
+    let response;
+    try {
+      response = await fetch(SHEET_CSV_URL);
+      if (!response.ok) throw new Error('direct failed');
+    } catch (e) {
+      // Jika gagal (CORS), coba via proxy
+      console.info('[AFF] Fetch langsung gagal, mencoba via proxy...');
+      const PROXY = 'https://corsproxy.io/?';
+      response = await fetch(PROXY + encodeURIComponent(SHEET_CSV_URL));
+    }
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const data = await response.text();
 
