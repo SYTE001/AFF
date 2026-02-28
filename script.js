@@ -11,7 +11,7 @@
    Format header baris pertama Google Sheets harus PERSIS:
    id , name , price , description , image , affiliateLink , category
 ================================ */
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1rMvDmIgbhEoWJ9-EZjV_mqBX559rQDmPSocSuSX_K24/edit?usp=sharing';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSopEemVVM5WpVfAtMPhp00uSHjRObIYxcX94kvHmPON4SN6_yTJVf788KYVeCB9KlMy4iul19GnSKj/pubhtml';
 
 /* ================================
    DATA PRODUK DEFAULT (FALLBACK)
