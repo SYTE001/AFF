@@ -80,7 +80,7 @@ const defaultProducts = [
 ================================ */
 async function fetchProductsFromSheet() {
   // Jika URL belum diisi, pakai data default
-  if (!SHEET_CSV_URL || SHEET_CSV_URL === 'PASTE_LINK_CSV_ANDA_DI_SINI') {
+  if (!SHEET_CSV_URL || SHEET_CSV_URL === 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSopEemVVM5WpVfAtMPhp00uSHjRObIYxcX94kvHmPON4SN6_yTJVf788KYVeCB9KlMy4iul19GnSKj/pub?output=csv') {
     console.info('[AFF] Google Sheets belum dikonfigurasi. Menggunakan data default.');
     return defaultProducts;
   }
