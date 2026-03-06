@@ -30,7 +30,8 @@ Karena keterbatasan fitur Keranjang Kuning (syarat 600 followers), **AFF** hadir
 ---
 
 ### 📸 Preview Tampilan
-*(https://xnovaa.pages.dev/#about)*
+*(<img width="1360" height="597" alt="image" src="https://github.com/user-attachments/assets/9f14a696-dda5-4853-923e-ce32f610e121" />
+)*
 
 ---
 **Made with ❤️ for Affiliate Creators**
