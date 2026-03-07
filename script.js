@@ -7,7 +7,7 @@
 'use strict';
 
 // ── CONFIG ──────────────────────────────────────────────────
-const JSON_API_URL  = 'https://script.google.com/macros/s/AKfycbwB-b8UAIy0jkDfzHzgjkG5QaqO0FDGzL-edthnn_Gq7Z75oVPzDK07Rae7pfOmqtUSgA/exec';
+const JSON_API_URL  = 'https://script.google.com/macros/s/AKfycbydoJ5Qt38ZzqiHjSKlYMnz7XQib_KiIfyWk5A55DeGelx6SXDBhqjhKrFc17movju3Sw/exec';
 const PER_PAGE      = 12;
 const SEARCH_DELAY  = 300;
 const WISHLIST_KEY  = 'pilihcerdas_wishlist_v2';
