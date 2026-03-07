@@ -817,10 +817,15 @@
   //  WRITE API (POST ke Apps Script)
   // ══════════════════════════════════════════════════════════
   async function apiPost(action, payload) {
+    // Google Apps Script tidak support CORS untuk POST JSON langsung.
+    // Workaround: kirim sebagai URLSearchParams (tidak trigger preflight CORS)
+    const body = new URLSearchParams({
+      payload: JSON.stringify({ action, token: WRITE_TOKEN, ...payload })
+    });
     const res = await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, token: WRITE_TOKEN, ...payload }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
     });
     return res.json();
   }
