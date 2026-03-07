@@ -711,9 +711,9 @@
   // ══════════════════════════════════════════════════════════
   //  CONFIG — Ganti dengan URL Apps Script kamu
   // ══════════════════════════════════════════════════════════
-  const API_URL     = 'https://script.google.com/macros/s/AKfycbxFOKpW1biCWYNm8S6Tga7BdKojCSLTkdpnAoCKdm-g4S6zhxKpYXgJraNrt2pKM7-NXQ/exec';
-  const ADMIN_PASS  = 'alifmm993';   // ← ganti password login admin panel
-  const WRITE_TOKEN = 'xK9#mP2$qL7!nR4@wZ8vB3'; // ← token rahasia dari Apps Script Properties
+  const API_URL     = 'https://script.google.com/macros/s/GANTI_DENGAN_URL_KAMU/exec';
+  const ADMIN_PASS  = 'pilihcerdas2024';   // ← ganti password login admin panel
+  const WRITE_TOKEN = 'GANTI_DENGAN_TOKEN_KAMU'; // ← token rahasia dari Apps Script Properties
   const SESSION_KEY = 'pc_admin_session';
 
   // ══════════════════════════════════════════════════════════
@@ -817,16 +817,12 @@
   //  WRITE API (POST ke Apps Script)
   // ══════════════════════════════════════════════════════════
   async function apiPost(action, payload) {
-    // Google Apps Script tidak support CORS untuk POST JSON langsung.
-    // Workaround: kirim sebagai URLSearchParams (tidak trigger preflight CORS)
-    const body = new URLSearchParams({
-      payload: JSON.stringify({ action, token: WRITE_TOKEN, ...payload })
-    });
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString(),
-    });
+    // Google Apps Script tidak support POST CORS dari browser.
+    // Solusi: encode data sebagai base64 agar spasi & karakter khusus aman.
+    const json   = JSON.stringify({ action, token: WRITE_TOKEN, ...payload });
+    const b64    = btoa(unescape(encodeURIComponent(json)));
+    const url    = API_URL + '?data=' + b64 + '&enc=b64&v=' + Date.now();
+    const res    = await fetch(url);
     return res.json();
   }
 
