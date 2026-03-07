@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — PilihCerdas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design Tokens (sama persis dengan style.css) ── */
+    :root {
+      --bg:            #f0f1f6;
+      --bg-2:          #e4e6ef;
+      --surface:       rgba(255,255,255,0.65);
+      --surface-2:     rgba(255,255,255,0.88);
+      --text:          #0d0f17;
+      --text-dim:      #64748b;
+      --text-faint:    #94a3b8;
+      --accent:        #ff3b5c;
+      --accent-dim:    rgba(255,59,92,0.14);
+      --accent-glow:   rgba(255,59,92,0.32);
+      --gold:          #e8970a;
+      --emerald:       #059669;
+      --emerald-dim:   rgba(5,150,105,0.14);
+      --violet:        #7c3aed;
+      --violet-dim:    rgba(124,58,237,0.14);
+      --border:        rgba(0,0,0,0.07);
+      --border-2:      rgba(0,0,0,0.13);
+      --shadow:        0 4px 24px rgba(0,0,0,0.07);
+      --shadow-lg:     0 20px 60px rgba(0,0,0,0.10);
+      --glass:         blur(20px) saturate(160%);
+      --radius:        20px;
+      --radius-sm:     12px;
+      --radius-xs:     8px;
+      --ease:          cubic-bezier(0.25,0.8,0.25,1);
+      --spring:        cubic-bezier(0.34,1.56,0.64,1);
+      --danger:        #ef4444;
+      --danger-dim:    rgba(239,68,68,0.14);
+    }
+    [data-theme="dark"] {
+      --bg:            #090a0f;
+      --bg-2:          #0e1018;
+      --surface:       rgba(16,18,28,0.60);
+      --surface-2:     rgba(20,22,34,0.88);
+      --surface-hover: rgba(26,29,44,0.95);
+      --text:          #edf0f7;
+      --text-dim:      #94a3b8;
+      --text-faint:    #64748b;
+      --border:        rgba(255,255,255,0.07);
+      --border-2:      rgba(255,255,255,0.13);
+      --shadow:        0 4px 24px rgba(0,0,0,0.40);
+      --shadow-lg:     0 20px 60px rgba(0,0,0,0.55);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background .5s, color .3s;
+    }
+
+    /* ── Mesh BG ── */
+    .mesh-bg { position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none; }
+    .mesh-blob { position:absolute; border-radius:50%; filter:blur(110px); will-change:transform; }
+    .blob-1 {
+      width:640px; height:640px;
+      background: radial-gradient(circle at 40% 40%, #ff3b5c 0%, transparent 65%);
+      top:-220px; left:-220px; opacity:.18;
+      animation: b1 24s ease-in-out infinite alternate;
+    }
+    .blob-2 {
+      width:750px; height:750px;
+      background: radial-gradient(circle at 60% 60%, #3730a3 0%, transparent 65%);
+      bottom:-280px; right:-240px; opacity:.15;
+      animation: b2 30s ease-in-out infinite alternate;
+    }
+    @keyframes b1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(80px,60px) scale(1.12)} }
+    @keyframes b2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-70px,-50px) scale(1.1)} }
+    .mesh-noise {
+      position:absolute; inset:0; opacity:.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    /* ── Lock Screen ── */
+    #lock-screen {
+      position:fixed; inset:0; z-index:1000;
+      display:flex; align-items:center; justify-content:center;
+      background: var(--bg);
+    }
+    .lock-card {
+      width:min(420px, 92vw);
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      backdrop-filter: var(--glass);
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      animation: fadeUp .5s var(--ease) both;
+    }
+    .lock-icon { font-size: 3rem; margin-bottom: 16px; }
+    .lock-card h1 {
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .lock-card h1 span { color: var(--accent); }
+    .lock-card p { color: var(--text-dim); font-size: .9rem; margin-bottom: 28px; }
+    .lock-input {
+      width:100%; padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-2);
+      background: var(--bg-2);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border .2s;
+      letter-spacing: .15em;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .lock-input:focus { border-color: var(--accent); }
+    .lock-input.shake { animation: shake .4s ease; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+    }
+    .lock-error { color: var(--danger); font-size:.85rem; min-height:20px; margin-bottom:12px; }
+    .btn-unlock {
+      width:100%; padding:14px;
+      border-radius: var(--radius-sm);
+      border: none; cursor: pointer;
+      background: var(--accent);
+      color: #fff; font-family:'Outfit',sans-serif;
+      font-size:1rem; font-weight:600;
+      transition: transform .15s var(--spring), box-shadow .2s;
+    }
+    .btn-unlock:hover { transform:translateY(-2px); box-shadow:0 8px 24px var(--accent-glow); }
+    .btn-unlock:active { transform:scale(.97); }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: var(--glass);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .nav-inner {
+      max-width:1320px; margin:0 auto;
+      padding: 0 24px;
+      height: 60px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .nav-brand {
+      font-family:'Bricolage Grotesque',sans-serif;
+      font-size:1.2rem; font-weight:800;
+    }
+    .nav-brand span { color:var(--accent); }
+    .badge-admin {
+      background: var(--violet-dim);
+      color: var(--violet);
+      border: 1px solid rgba(124,58,237,.25);
+      padding: 3px 10px; border-radius:99px;
+      font-size:.7rem; font-weight:600;
+      margin-left:8px; text-transform:uppercase; letter-spacing:.05em;
+    }
+    .nav-right { display:flex; gap:8px; align-items:center; }
+    .nav-btn {
+      width:38px; height:38px; border-radius:99px;
+      border:1px solid var(--border-2);
+      background:var(--surface-2); cursor:pointer; color:var(--text);
+      font-size:1rem; display:flex; align-items:center; justify-content:center;
+      transition: background .2s, transform .15s var(--spring);
+    }
+    .nav-btn:hover { background:var(--surface-hover); transform:scale(1.1); }
+    .stat-chip {
+      display:flex; align-items:center; gap:6px;
+      padding:6px 14px; border-radius:99px;
+      border:1px solid var(--border-2);
+      background:var(--surface-2);
+      font-size:.82rem; color:var(--text-dim);
+    }
+    .stat-chip strong { color:var(--text); }
+
+    /* ── Layout ── */
+    .app {
+      max-width:1320px; margin:0 auto;
+      padding: 28px 24px 80px;
+      display:grid; gap:24px;
+    }
+
+    /* ── Section Header ── */
+    .section-header {
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:12px;
+    }
+    .section-title {
+      font-family:'Bricolage Grotesque',sans-serif;
+      font-size:1.35rem; font-weight:800;
+    }
+    .section-title span { color:var(--accent); }
+
+    /* ── Glass Panel ── */
+    .glass-panel {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      backdrop-filter:var(--glass);
+      box-shadow:var(--shadow);
+      padding:28px;
+    }
+
+    /* ── Form Grid ── */
+    .form-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap:16px;
+    }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group.span-2 { grid-column: span 2; }
+    .form-group.span-full { grid-column: 1/-1; }
+    label {
+      font-size:.8rem; font-weight:600;
+      color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em;
+    }
+    label .req { color:var(--accent); }
+    input[type=text], input[type=number], input[type=url],
+    textarea, select {
+      padding:11px 14px;
+      border-radius:var(--radius-sm);
+      border:1.5px solid var(--border-2);
+      background:var(--bg-2);
+      color:var(--text);
+      font-family:'Outfit',sans-serif; font-size:.92rem;
+      outline:none;
+      transition:border .2s, box-shadow .2s;
+      width:100%;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px var(--accent-dim);
+    }
+    textarea { resize:vertical; min-height:80px; }
+
+    /* ── Image Preview ── */
+    .img-preview-wrap {
+      width:100%; aspect-ratio:16/7;
+      border-radius:var(--radius-sm);
+      border:1.5px dashed var(--border-2);
+      overflow:hidden; position:relative;
+      background:var(--bg-2);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .img-preview-wrap img {
+      width:100%; height:100%; object-fit:cover;
+      opacity:0; transition:opacity .3s;
+    }
+    .img-preview-wrap img.loaded { opacity:1; }
+    .img-placeholder {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:8px; color:var(--text-faint); font-size:.85rem;
+      pointer-events:none; transition:opacity .3s;
+    }
+    .img-placeholder span { font-size:2rem; }
+
+    /* ── Form Actions ── */
+    .form-actions {
+      display:flex; gap:10px; flex-wrap:wrap;
+      padding-top:4px;
+    }
+    .btn {
+      padding:11px 22px; border-radius:var(--radius-sm);
+      border:none; cursor:pointer;
+      font-family:'Outfit',sans-serif; font-size:.92rem; font-weight:600;
+      display:inline-flex; align-items:center; gap:7px;
+      transition:transform .15s var(--spring), box-shadow .2s, background .2s;
+    }
+    .btn:hover  { transform:translateY(-2px); }
+    .btn:active { transform:scale(.97); }
+    .btn-primary {
+      background:var(--accent); color:#fff;
+    }
+    .btn-primary:hover { box-shadow:0 8px 24px var(--accent-glow); }
+    .btn-secondary {
+      background:var(--surface-2); color:var(--text);
+      border:1px solid var(--border-2);
+    }
+    .btn-danger {
+      background:var(--danger-dim); color:var(--danger);
+      border:1px solid rgba(239,68,68,.2);
+    }
+    .btn-danger:hover { background:var(--danger); color:#fff; }
+    .btn-success {
+      background:var(--emerald-dim); color:var(--emerald);
+      border:1px solid rgba(5,150,105,.25);
+    }
+    .btn-success:hover { background:var(--emerald); color:#fff; }
+    .btn:disabled {
+      opacity:.5; pointer-events:none;
+    }
+    .btn-sm { padding:7px 14px; font-size:.8rem; }
+
+    /* ── Search & Filter Toolbar ── */
+    .toolbar {
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+      padding:16px 20px;
+    }
+    .search-wrap {
+      flex:1; min-width:200px;
+      position:relative;
+    }
+    .search-wrap input {
+      padding-left:36px; padding-right:14px;
+    }
+    .search-icon {
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      color:var(--text-faint); font-size:1rem; pointer-events:none;
+    }
+    .filter-pills {
+      display:flex; gap:6px; flex-wrap:wrap;
+    }
+    .pill {
+      padding:6px 14px; border-radius:99px;
+      border:1px solid var(--border-2);
+      background:var(--surface-2);
+      color:var(--text-dim); font-size:.8rem; font-weight:500;
+      cursor:pointer; transition:all .2s;
+    }
+    .pill:hover { border-color:var(--accent); color:var(--accent); }
+    .pill.active {
+      background:var(--accent); color:#fff;
+      border-color:var(--accent);
+    }
+
+    /* ── Product Table ── */
+    .table-wrap { overflow-x:auto; }
+    table {
+      width:100%; border-collapse:collapse;
+      font-size:.88rem;
+    }
+    th {
+      text-align:left; padding:10px 14px;
+      color:var(--text-faint); font-size:.75rem;
+      font-weight:600; text-transform:uppercase; letter-spacing:.06em;
+      border-bottom:1px solid var(--border-2);
+      white-space:nowrap;
+    }
+    td {
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      vertical-align:middle;
+    }
+    tr:last-child td { border-bottom:none; }
+    tr { transition:background .15s; }
+    tr:hover td { background:rgba(255,255,255,.03); }
+    .td-img {
+      width:52px; height:40px; border-radius:8px;
+      object-fit:cover; display:block;
+    }
+    .td-name { font-weight:600; max-width:200px; }
+    .td-name small { display:block; color:var(--text-faint); font-size:.78rem; font-weight:400; margin-top:2px; }
+    .td-price { color:var(--accent); font-weight:600; white-space:nowrap; }
+    .td-rating { white-space:nowrap; }
+    .td-actions { display:flex; gap:6px; white-space:nowrap; }
+
+    /* ── Badge ── */
+    .badge {
+      display:inline-block; padding:3px 9px;
+      border-radius:99px; font-size:.72rem; font-weight:600;
+    }
+    .badge-viral    { background:rgba(124,58,237,.15); color:#7c3aed; }
+    .badge-diskon   { background:rgba(232,151,10,.15); color:#e8970a; }
+    .badge-must     { background:rgba(5,150,105,.15);  color:#059669; }
+    .badge-terbatas { background:rgba(239,68,68,.15);  color:#ef4444; }
+    .badge-worth    { background:rgba(255,59,92,.12);  color:#ff3b5c; }
+
+    /* ── Preview Card (sama styling dengan index.html) ── */
+    #preview-area { display:none; }
+    .preview-card {
+      background:var(--surface-2);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      overflow:hidden;
+      max-width:340px;
+      box-shadow:var(--shadow-lg);
+      animation:fadeUp .3s var(--ease) both;
+    }
+    .preview-card-img {
+      width:100%; aspect-ratio:4/3; object-fit:cover;
+      background:var(--bg-2);
+    }
+    .preview-card-body { padding:18px; }
+    .preview-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .preview-card-title { font-weight:700; margin-bottom:6px; font-size:.95rem; }
+    .preview-card-desc { color:var(--text-dim); font-size:.82rem; margin-bottom:8px; line-height:1.55; }
+    .preview-card-review {
+      background:var(--accent-dim); border-left:3px solid var(--accent);
+      padding:8px 12px; border-radius:0 8px 8px 0;
+      font-size:.8rem; color:var(--text-dim); margin-bottom:10px; font-style:italic;
+    }
+    .preview-card-price { color:var(--accent); font-size:1.1rem; font-weight:700; margin-bottom:12px; }
+    .preview-card-btn {
+      display:inline-block; padding:9px 18px;
+      background:var(--accent); color:#fff;
+      border-radius:var(--radius-xs); font-size:.85rem; font-weight:600;
+    }
+
+    /* ── Empty / Loading States ── */
+    .empty-row td {
+      text-align:center; padding:48px; color:var(--text-faint);
+    }
+    .spinner {
+      display:inline-block; width:18px; height:18px;
+      border:2.5px solid var(--border-2);
+      border-top-color:var(--accent);
+      border-radius:50%;
+      animation:spin .7s linear infinite;
+      vertical-align:middle; margin-right:6px;
+    }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ── Toast ── */
+    #toast {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--surface-2); color:var(--text);
+      border:1px solid var(--border-2);
+      padding:12px 22px; border-radius:99px;
+      font-size:.88rem; font-weight:500;
+      backdrop-filter:var(--glass);
+      box-shadow:var(--shadow-lg);
+      opacity:0; pointer-events:none;
+      transition:opacity .25s, transform .3s var(--spring);
+      z-index:500; white-space:nowrap;
+    }
+    #toast.show {
+      opacity:1; transform:translateX(-50%) translateY(0);
+    }
+    #toast.toast-success { border-color:rgba(5,150,105,.35); color:var(--emerald); }
+    #toast.toast-error   { border-color:rgba(239,68,68,.35);  color:var(--danger); }
+
+    /* ── Delete Confirm Modal ── */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:200;
+      background:rgba(0,0,0,.55);
+      backdrop-filter:blur(6px);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .25s;
+    }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal-box {
+      background:var(--surface-2);
+      border:1px solid var(--border-2);
+      border-radius:var(--radius);
+      padding:36px 32px; width:min(420px,90vw);
+      box-shadow:var(--shadow-lg);
+      transform:translateY(20px) scale(.97);
+      transition:transform .3s var(--spring);
+      text-align:center;
+    }
+    .modal-overlay.open .modal-box { transform:none; }
+    .modal-box h3 { font-size:1.2rem; font-weight:700; margin-bottom:10px; }
+    .modal-box p  { color:var(--text-dim); font-size:.9rem; margin-bottom:24px; }
+    .modal-actions { display:flex; gap:10px; justify-content:center; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(18px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width:640px) {
+      .app { padding:16px 12px 60px; }
+      .glass-panel { padding:18px; }
+      .form-group.span-2 { grid-column:span 1; }
+      .nav-inner { padding:0 14px; }
+      .stat-chip { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mesh Background -->
+  <div class="mesh-bg" aria-hidden="true">
+    <div class="mesh-blob blob-1"></div>
+    <div class="mesh-blob blob-2"></div>
+    <div class="mesh-noise"></div>
+  </div>
+
+  <!-- Lock Screen -->
+  <div id="lock-screen">
+    <div class="lock-card">
+      <div class="lock-icon">🔐</div>
+      <h1>Pilih<span>Cerdas</span></h1>
+      <p>Masukkan password untuk membuka Admin Panel</p>
+      <input
+        type="password"
+        id="pw-input"
+        class="lock-input"
+        placeholder="••••••••"
+        autocomplete="current-password"
+      />
+      <div class="lock-error" id="pw-error"></div>
+      <button class="btn-unlock" id="pw-submit">Masuk →</button>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-inner">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="nav-brand">Pilih<span>Cerdas</span></div>
+        <span class="badge-admin">Admin</span>
+      </div>
+      <div class="nav-right">
+        <div class="stat-chip">
+          <span>🗂️</span>
+          <strong id="nav-count">—</strong>
+          <span>produk</span>
+        </div>
+        <button class="nav-btn" id="theme-btn" title="Ganti Tema" aria-label="Ganti Tema">🌓</button>
+        <button class="nav-btn" id="logout-btn" title="Logout" aria-label="Logout">🚪</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app" id="main-app" style="display:none">
+
+    <!-- ── Form Add / Edit ── -->
+    <section>
+      <div class="section-header" style="margin-bottom:18px">
+        <div class="section-title" id="form-title">➕ Tambah <span>Produk</span></div>
+        <div style="color:var(--text-faint);font-size:.85rem" id="edit-label"></div>
+      </div>
+
+      <div class="glass-panel">
+        <div class="form-grid" id="product-form">
+
+          <div class="form-group">
+            <label>ID Produk <span class="req">*</span></label>
+            <input type="text" id="f-id" placeholder="Contoh: 9" />
+          </div>
+
+          <div class="form-group">
+            <label>Kategori <span class="req">*</span></label>
+            <input type="text" id="f-category" placeholder="Fashion / Elektronik / ..." list="cat-list" />
+            <datalist id="cat-list"></datalist>
+          </div>
+
+          <div class="form-group span-2">
+            <label>Nama Produk <span class="req">*</span></label>
+            <input type="text" id="f-name" placeholder="Nama lengkap produk" />
+          </div>
+
+          <div class="form-group">
+            <label>Harga (angka) <span class="req">*</span></label>
+            <input type="number" id="f-price" placeholder="150000" min="0" />
+          </div>
+
+          <div class="form-group">
+            <label>Rating</label>
+            <input type="number" id="f-rating" placeholder="4.8" min="1" max="5" step="0.1" />
+          </div>
+
+          <div class="form-group span-2">
+            <label>Label / Badge</label>
+            <select id="f-label">
+              <option value="Worth It">Worth It</option>
+              <option value="Viral">Viral</option>
+              <option value="Must Have">Must Have</option>
+              <option value="Best Seller">Best Seller</option>
+              <option value="Diskon Gila">Diskon Gila</option>
+              <option value="Terbatas">Terbatas</option>
+            </select>
+          </div>
+
+          <div class="form-group span-full">
+            <label>URL Gambar <span class="req">*</span></label>
+            <input type="url" id="f-image" placeholder="https://images.unsplash.com/..." />
+          </div>
+
+          <div class="form-group span-full">
+            <label>Preview Gambar</label>
+            <div class="img-preview-wrap">
+              <img id="img-preview" src="" alt="preview">
+              <div class="img-placeholder" id="img-placeholder">
+                <span>🖼️</span>
+                <p>Gambar muncul otomatis setelah URL diisi</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group span-full">
+            <label>URL Affiliate / Toko <span class="req">*</span></label>
+            <input type="url" id="f-link" placeholder="https://shopee.co.id/..." />
+          </div>
+
+          <div class="form-group span-full">
+            <label>Deskripsi <span class="req">*</span></label>
+            <textarea id="f-desc" rows="3" placeholder="Deskripsi singkat produk..."></textarea>
+          </div>
+
+          <div class="form-group span-full">
+            <label>Personal Review</label>
+            <textarea id="f-review" rows="2" placeholder="Kesan jujur kamu tentang produk ini..."></textarea>
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <!-- Preview kartu -->
+        <div id="preview-area" style="margin-top:24px; border-top:1px solid var(--border); padding-top:24px;">
+          <div style="font-size:.8rem; font-weight:600; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:14px;">Preview Kartu Produk</div>
+          <div class="preview-card" id="preview-card">
+            <img class="preview-card-img" id="pv-img" src="" alt="">
+            <div class="preview-card-body">
+              <div class="preview-card-header">
+                <span class="badge" id="pv-badge"></span>
+                <span id="pv-rating" style="font-size:.85rem">⭐ —</span>
+              </div>
+              <div class="preview-card-title" id="pv-name">—</div>
+              <div class="preview-card-desc" id="pv-desc">—</div>
+              <div class="preview-card-review" id="pv-review" style="display:none"></div>
+              <div class="preview-card-price" id="pv-price">—</div>
+              <span class="preview-card-btn">🛒 Sikat!</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+          <button class="btn btn-primary" id="btn-save">
+            <span id="btn-save-icon">💾</span>
+            <span id="btn-save-text">Simpan Produk</span>
+          </button>
+          <button class="btn btn-secondary" id="btn-preview-toggle">👁️ Preview Kartu</button>
+          <button class="btn btn-secondary" id="btn-reset">✕ Reset Form</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Product List ── -->
+    <section>
+      <div class="section-header" style="margin-bottom:14px">
+        <div class="section-title">📋 Daftar <span>Produk</span></div>
+        <button class="btn btn-secondary btn-sm" id="btn-refresh">🔄 Refresh</button>
+      </div>
+
+      <div class="glass-panel" style="padding:0; overflow:hidden;">
+        <!-- Toolbar -->
+        <div class="toolbar" style="border-bottom:1px solid var(--border)">
+          <div class="search-wrap">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="list-search" placeholder="Cari produk..." />
+          </div>
+          <div class="filter-pills" id="list-pills"></div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="product-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Produk</th>
+                <th>Kategori</th>
+                <th>Label</th>
+                <th>Harga</th>
+                <th>Rating</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr class="empty-row">
+                <td colspan="7"><div class="spinner"></div> Memuat data…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /app -->
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal-box">
+      <div style="font-size:2.5rem;margin-bottom:12px">🗑️</div>
+      <h3>Hapus Produk?</h3>
+      <p id="modal-product-name">Produk ini akan dihapus permanen dari spreadsheet.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">Batal</button>
+        <button class="btn btn-danger" id="modal-confirm">Hapus Sekarang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <script>
+  'use strict';
+
+  // ══════════════════════════════════════════════════════════
+  //  CONFIG — Ganti dengan URL Apps Script kamu
+  // ══════════════════════════════════════════════════════════
+  const API_URL     = 'https://script.google.com/macros/s/GANTI_DENGAN_URL_KAMU/exec';
+  const ADMIN_PASS  = 'pilihcerdas2024';   // ← ganti password login admin panel
+  const WRITE_TOKEN = 'GANTI_DENGAN_TOKEN_KAMU'; // ← token rahasia dari Apps Script Properties
+  const SESSION_KEY = 'pc_admin_session';
+
+  // ══════════════════════════════════════════════════════════
+  //  STATE
+  // ══════════════════════════════════════════════════════════
+  let products     = [];
+  let editingId    = null;   // null = mode tambah, string = mode edit
+  let deleteTarget = null;
+  let filterCat    = 'Semua';
+  let searchQ      = '';
+  let previewOpen  = false;
+
+  // ══════════════════════════════════════════════════════════
+  //  UTILS
+  // ══════════════════════════════════════════════════════════
+  const $ = id => document.getElementById(id);
+
+  function formatPrice(val) {
+    const n = parseInt(String(val ?? '0').replace(/[^0-9]/g, ''), 10);
+    return isNaN(n) ? String(val) : 'Rp\u00A0' + n.toLocaleString('id-ID');
+  }
+
+  function esc(s) {
+    return (s == null ? '' : String(s))
+      .replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  }
+
+  function getBadgeClass(label) {
+    const l = (label || '').toLowerCase();
+    if (l.includes('terbatas') || l.includes('limited')) return 'badge-terbatas';
+    if (l.includes('diskon')   || l.includes('sale'))    return 'badge-diskon';
+    if (l.includes('viral')    || l.includes('trending'))return 'badge-viral';
+    if (l.includes('must')     || l.includes('best'))    return 'badge-must';
+    return 'badge-worth';
+  }
+
+  let _toastTimer;
+  function showToast(msg, type = 'info') {
+    const el = $('toast');
+    el.textContent = msg;
+    el.className = `toast toast-${type} show`;
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  AUTH
+  // ══════════════════════════════════════════════════════════
+  function checkSession() {
+    return sessionStorage.getItem(SESSION_KEY) === 'ok';
+  }
+
+  function unlock() {
+    const val = $('pw-input').value;
+    if (val === ADMIN_PASS) {
+      sessionStorage.setItem(SESSION_KEY, 'ok');
+      $('lock-screen').style.opacity = '0';
+      $('lock-screen').style.transition = 'opacity .4s';
+      setTimeout(() => { $('lock-screen').style.display = 'none'; }, 400);
+      $('main-app').style.display = 'grid';
+      loadProducts();
+    } else {
+      $('pw-error').textContent = 'Password salah, coba lagi.';
+      $('pw-input').classList.add('shake');
+      setTimeout(() => $('pw-input').classList.remove('shake'), 400);
+    }
+  }
+
+  $('pw-submit').addEventListener('click', unlock);
+  $('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+  $('logout-btn').addEventListener('click', () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  });
+
+  if (checkSession()) {
+    $('lock-screen').style.display = 'none';
+    $('main-app').style.display = 'grid';
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  DATA FETCH
+  // ══════════════════════════════════════════════════════════
+  async function loadProducts() {
+    $('table-body').innerHTML = `<tr class="empty-row"><td colspan="7"><div class="spinner"></div> Memuat data…</td></tr>`;
+    try {
+      const res  = await fetch(API_URL + '?v=' + Date.now());
+      const json = await res.json();
+      products   = Array.isArray(json) ? json : (json.products ?? json.data ?? []);
+      $('nav-count').textContent = products.length;
+      buildCatList();
+      renderTable();
+    } catch (err) {
+      $('table-body').innerHTML = `<tr class="empty-row"><td colspan="7">❌ Gagal memuat data. Cek URL API & koneksi.</td></tr>`;
+      showToast('Gagal memuat data dari spreadsheet', 'error');
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  WRITE API (POST ke Apps Script)
+  // ══════════════════════════════════════════════════════════
+  async function apiPost(action, payload) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, token: WRITE_TOKEN, ...payload }),
+    });
+    return res.json();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  TABLE RENDER
+  // ══════════════════════════════════════════════════════════
+  function buildCatList() {
+    const cats = ['Semua', ...new Set(products.map(p => p.category).filter(Boolean))];
+    // Filter pills
+    $('list-pills').innerHTML = cats.map(c =>
+      `<button class="pill ${c === filterCat ? 'active' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`
+    ).join('');
+    $('list-pills').querySelectorAll('.pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterCat = btn.dataset.cat;
+        $('list-pills').querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.cat === filterCat));
+        renderTable();
+      });
+    });
+    // Datalist autocomplete di form
+    $('cat-list').innerHTML = [...new Set(products.map(p => p.category).filter(Boolean))]
+      .map(c => `<option value="${esc(c)}">`).join('');
+  }
+
+  function renderTable() {
+    let list = filterCat === 'Semua' ? [...products] : products.filter(p => p.category === filterCat);
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      list = list.filter(p => [p.name, p.category, p.label, p.description]
+        .some(v => v != null && String(v).toLowerCase().includes(q)));
+    }
+
+    if (list.length === 0) {
+      $('table-body').innerHTML = `<tr class="empty-row"><td colspan="7">🕵️‍♂️ Tidak ada produk ditemukan.</td></tr>`;
+      return;
+    }
+
+    $('table-body').innerHTML = list.map(p => {
+      const id = esc(String(p.id));
+      const badgeClass = getBadgeClass(p.label);
+      return `
+        <tr>
+          <td><img class="td-img"
+            src="${esc(String(p.image || ''))}"
+            alt="${esc(String(p.name || ''))}"
+            onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=50'"
+            loading="lazy"></td>
+          <td class="td-name">
+            ${esc(String(p.name || '—'))}
+            <small>ID: ${id}</small>
+          </td>
+          <td>${esc(String(p.category || '—'))}</td>
+          <td><span class="badge ${badgeClass}">${esc(String(p.label || 'Worth It'))}</span></td>
+          <td class="td-price">${formatPrice(p.price)}</td>
+          <td class="td-rating">⭐ ${esc(String(p.rating || '—'))}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-success btn-sm" onclick="startEdit('${id}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm"  onclick="confirmDelete('${id}')">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  FORM — tambah / edit
+  // ══════════════════════════════════════════════════════════
+  function getFormData() {
+    return {
+      id:            $('f-id').value.trim(),
+      name:          $('f-name').value.trim(),
+      price:         $('f-price').value.trim(),
+      rating:        $('f-rating').value.trim(),
+      category:      $('f-category').value.trim(),
+      label:         $('f-label').value,
+      image:         $('f-image').value.trim(),
+      affiliateLink: $('f-link').value.trim(),
+      description:   $('f-desc').value.trim(),
+      personal_review: $('f-review').value.trim(),
+    };
+  }
+
+  function fillForm(p) {
+    $('f-id').value       = p.id || '';
+    $('f-name').value     = p.name || '';
+    $('f-price').value    = p.price || '';
+    $('f-rating').value   = p.rating || '';
+    $('f-category').value = p.category || '';
+    $('f-label').value    = p.label || 'Worth It';
+    $('f-image').value    = p.image || '';
+    $('f-link').value     = p.affiliateLink || '';
+    $('f-desc').value     = p.description || '';
+    $('f-review').value   = p.personal_review || '';
+    updateImgPreview(p.image || '');
+    if (previewOpen) updatePreviewCard();
+  }
+
+  function resetForm() {
+    ['f-id','f-name','f-price','f-rating','f-category','f-image','f-link','f-desc','f-review']
+      .forEach(id => { $(id).value = ''; });
+    $('f-label').value = 'Worth It';
+    $('f-id').disabled = false;
+    editingId = null;
+    $('form-title').innerHTML = '➕ Tambah <span>Produk</span>';
+    $('edit-label').textContent = '';
+    $('btn-save-icon').textContent = '💾';
+    $('btn-save-text').textContent = 'Simpan Produk';
+    updateImgPreview('');
+    if (previewOpen) updatePreviewCard();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function startEdit(id) {
+    const p = products.find(x => String(x.id) === String(id));
+    if (!p) return;
+    editingId = String(id);
+    fillForm(p);
+    $('f-id').disabled = true;  // ID tidak boleh diubah saat edit
+    $('form-title').innerHTML = '✏️ Edit <span>Produk</span>';
+    $('edit-label').textContent = `Mengedit: ${p.name}`;
+    $('btn-save-icon').textContent = '✅';
+    $('btn-save-text').textContent = 'Update Produk';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast(`Edit mode: ${p.name}`, 'info');
+  }
+
+  async function saveProduct() {
+    const data = getFormData();
+    if (!data.id || !data.name || !data.price || !data.image || !data.affiliateLink || !data.description) {
+      showToast('⚠️ Isi semua field wajib (*)!', 'error');
+      return;
+    }
+
+    const btn = $('btn-save');
+    btn.disabled = true;
+    $('btn-save-text').textContent = 'Menyimpan…';
+
+    try {
+      const action = editingId ? 'update' : 'add';
+      const result = await apiPost(action, { product: data });
+
+      if (result.status === 'ok' || result.success) {
+        // Update local state
+        if (editingId) {
+          const idx = products.findIndex(p => String(p.id) === editingId);
+          if (idx >= 0) products[idx] = { ...products[idx], ...data };
+        } else {
+          products.push(data);
+        }
+        $('nav-count').textContent = products.length;
+        buildCatList();
+        renderTable();
+        resetForm();
+        showToast(editingId ? '✅ Produk berhasil diupdate!' : '✅ Produk berhasil ditambahkan!', 'success');
+      } else {
+        throw new Error(result.message || 'Unknown error');
+      }
+    } catch (err) {
+      showToast('❌ Gagal menyimpan: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      $('btn-save-icon').textContent = editingId ? '✅' : '💾';
+      $('btn-save-text').textContent = editingId ? 'Update Produk' : 'Simpan Produk';
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  DELETE
+  // ══════════════════════════════════════════════════════════
+  function confirmDelete(id) {
+    const p = products.find(x => String(x.id) === String(id));
+    deleteTarget = String(id);
+    $('modal-product-name').textContent = p ? `"${p.name}" akan dihapus permanen.` : 'Produk ini akan dihapus.';
+    $('delete-modal').classList.add('open');
+  }
+
+  async function doDelete() {
+    $('delete-modal').classList.remove('open');
+    const id = deleteTarget;
+    if (!id) return;
+
+    try {
+      const result = await apiPost('delete', { id });
+      if (result.status === 'ok' || result.success) {
+        products = products.filter(p => String(p.id) !== id);
+        $('nav-count').textContent = products.length;
+        buildCatList();
+        renderTable();
+        showToast('🗑️ Produk berhasil dihapus.', 'success');
+        if (editingId === id) resetForm();
+      } else {
+        throw new Error(result.message || 'Unknown');
+      }
+    } catch (err) {
+      showToast('❌ Gagal hapus: ' + err.message, 'error');
+    }
+    deleteTarget = null;
+  }
+
+  $('modal-confirm').addEventListener('click', doDelete);
+  $('modal-cancel').addEventListener('click', () => $('delete-modal').classList.remove('open'));
+
+  // ══════════════════════════════════════════════════════════
+  //  IMAGE PREVIEW
+  // ══════════════════════════════════════════════════════════
+  function updateImgPreview(url) {
+    const img  = $('img-preview');
+    const ph   = $('img-placeholder');
+    if (url) {
+      img.src = url;
+      img.onload  = () => { img.classList.add('loaded'); ph.style.opacity = '0'; };
+      img.onerror = () => { img.classList.remove('loaded'); ph.style.opacity = '1'; };
+    } else {
+      img.src = ''; img.className = 'loaded' in img ? '' : img.className.replace('loaded','');
+      ph.style.opacity = '1';
+    }
+  }
+
+  let _imgDebounce;
+  $('f-image').addEventListener('input', e => {
+    clearTimeout(_imgDebounce);
+    _imgDebounce = setTimeout(() => {
+      updateImgPreview(e.target.value.trim());
+      if (previewOpen) updatePreviewCard();
+    }, 500);
+  });
+
+  // Live preview listeners
+  ['f-name','f-price','f-rating','f-desc','f-review','f-label'].forEach(id => {
+    $(id).addEventListener('input', () => { if (previewOpen) updatePreviewCard(); });
+  });
+
+  // ══════════════════════════════════════════════════════════
+  //  PREVIEW CARD
+  // ══════════════════════════════════════════════════════════
+  function updatePreviewCard() {
+    const d = getFormData();
+    $('pv-img').src        = d.image || '';
+    $('pv-name').textContent = d.name || '—';
+    $('pv-desc').textContent = d.description || '—';
+    $('pv-price').textContent = d.price ? formatPrice(d.price) : '—';
+    $('pv-rating').textContent = d.rating ? '⭐ ' + d.rating : '⭐ —';
+    const badge = $('pv-badge');
+    badge.textContent = d.label;
+    badge.className   = 'badge ' + getBadgeClass(d.label);
+    const rev = $('pv-review');
+    if (d.personal_review) {
+      rev.textContent = '"' + d.personal_review + '"';
+      rev.style.display = 'block';
+    } else {
+      rev.style.display = 'none';
+    }
+  }
+
+  $('btn-preview-toggle').addEventListener('click', () => {
+    previewOpen = !previewOpen;
+    $('preview-area').style.display = previewOpen ? 'block' : 'none';
+    $('btn-preview-toggle').textContent = previewOpen ? '🙈 Sembunyikan' : '👁️ Preview Kartu';
+    if (previewOpen) updatePreviewCard();
+  });
+
+  // ══════════════════════════════════════════════════════════
+  //  EVENTS
+  // ══════════════════════════════════════════════════════════
+  $('btn-save').addEventListener('click', saveProduct);
+  $('btn-reset').addEventListener('click', resetForm);
+  $('btn-refresh').addEventListener('click', loadProducts);
+
+  $('list-search').addEventListener('input', e => {
+    searchQ = e.target.value;
+    renderTable();
+  });
+
+  $('theme-btn').addEventListener('click', () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  });
+
+  // Global expose (dipanggil dari onclick di tabel)
+  window.startEdit      = startEdit;
+  window.confirmDelete  = confirmDelete;
+
+  // ══════════════════════════════════════════════════════════
+  //  BOOT
+  // ══════════════════════════════════════════════════════════
+  if (checkSession()) loadProducts();
+  </script>
+</body>
+</html>
