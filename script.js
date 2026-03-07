@@ -1,351 +1,746 @@
-/* ================================
-   KONFIGURASI GOOGLE SHEETS
-   
-   CARA PAKAI:
-   1. Buka Google Sheets Anda
-   2. Klik File > Share > Publish to web
-   3. Pilih "Entire Document" dan format "Comma-separated values (.csv)"
-   4. Klik Publish, lalu salin link yang muncul
-   5. Tempel link tersebut di bawah (ganti PASTE_LINK_CSV_ANDA_DI_SINI)
-   
-   Format header baris pertama Google Sheets harus PERSIS:
-   id , name , price , description , image , affiliateLink , category
-================================ */
-const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSopEemVVM5WpVfAtMPhp00uSHjRObIYxcX94kvHmPON4SN6_yTJVf788KYVeCB9KlMy4iul19GnSKj/pub?output=csv';
+/* ============================================================
+   PilihCerdas MEGA UPDATE — script.js
+   JSON API · Skeleton Loading · Pagination · Debounce
+   Lazy Load · Wishlist · Deep Link · Price Format · Haptic
+   ============================================================
 
-/* ================================
-   DATA PRODUK DEFAULT (FALLBACK)
-   Digunakan jika Google Sheets belum
-   dikonfigurasi atau gagal diakses.
-================================ */
-const defaultProducts = [
+   CARA SETUP GOOGLE APPS SCRIPT (JSON API):
+   ──────────────────────────────────────────
+   1. Buka spreadsheet-mu → Extensions → Apps Script
+   2. Paste kode berikut lalu Save:
+
+      function doGet() {
+        const ss    = SpreadsheetApp.getActiveSpreadsheet();
+        const sheet = ss.getSheetByName('Sheet1');          // sesuaikan nama sheet
+        const data  = sheet.getDataRange().getValues();
+        const keys  = data[0];                              // baris pertama = header
+        const rows  = data.slice(1).map(row => {
+          const obj = {};
+          keys.forEach((k, i) => { obj[k] = row[i]; });
+          return obj;
+        }).filter(r => r.id);                               // buang baris kosong
+        const out = ContentService
+          .createTextOutput(JSON.stringify({ products: rows }))
+          .setMimeType(ContentService.MimeType.JSON);
+        return out;
+      }
+
+   3. Deploy → New deployment → Web App
+      - Execute as: Me
+      - Who has access: Anyone
+   4. Copy URL deployment → tempel di JSON_API_URL di bawah
+
+   Header kolom spreadsheet yang diharapkan (urutan bebas):
+   id | name | price | rating | description | image |
+   affiliateLink | category | label | personal_review
+*/
+
+'use strict';
+
+// ── CONFIG ──────────────────────────────────────────────────
+const JSON_API_URL  = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+const PER_PAGE      = 12;        // produk per halaman
+const SEARCH_DELAY  = 300;       // ms debounce pencarian
+const WISHLIST_KEY  = 'pilihcerdas_wishlist_v2';
+
+// ── FALLBACK DATA ─────────────────────────────────────────────
+const FALLBACK_PRODUCTS = [
   {
-    id: 1,
-    name: "Rak Dapur Dorong ",
-    price: "Rp 38.700",
-    description: "Rak ini cocok digunakan di berbagai lingkungan, baik itu di rumah, kantor, gudang, toko, atau tempat lainnya. Dengan desain yang serbaguna.",
-    image: "img/rak.jpg",
-    affiliateLink: "https://s.shopee.co.id/7po7yu5cqu",
-    category: "Furniture"
+    id: '1', name: "Oversized T-Shirt Premium '28 EIJ'", price: 129000, rating: '4.9',
+    description: 'Kaos putih oversized cutting sempurna, bahan 30s combed cotton tebal. Anti tembus & super adem.',
+    personal_review: 'Cuttingannya jatuh banget di badan, bahan adem & ga tembus. Wajib punya!',
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80',
+    affiliateLink: '#', category: 'Fashion', label: 'Must Have',
   },
   {
-    id: 2,
-    name: "Rak Sepatu X",
-    price: "Rp 29.400",
-    description: "Rak sepatu. Tersedia beberapa tingat 2/3/4/5/6. cocok ditaruh di mana saja, bisa di toilet, bawah meja, dekat pintu, bawah meja kerja dll.",
-    image: "img/rak1.png",
-    affiliateLink: "https://s.shopee.co.id/6KzKEG7ITg",
-    category: "Furniture"
+    id: '2', name: 'Mechanical Keyboard TKL RGB Wireless', price: 299000, rating: '4.5',
+    description: 'Keyboard mekanikal tenkeyless wireless. Switch blue, battery 3000mAh, RGB 16.8 juta warna.',
+    personal_review: 'Bunyi kliknya renyah, ngetik kode auto ngebut. Worth it banget untuk harganya!',
+    image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=600&q=80',
+    affiliateLink: '#', category: 'Elektronik', label: 'Diskon Gila',
   },
   {
-    id: 3,
-    name: "Lampu LED Ring Light 10 Inch + Tripod",
-    price: "Rp 95.000",
-    description: "Ring light 10 inci dengan 3 mode cahaya dan 10 level kecerahan. Termasuk tripod adjustable hingga 150 cm. Ideal untuk konten kreator.",
-    image: "img/redmi-buds.png",
-    affiliateLink: "https://shope.ee/example-ringlight",
-    category: "Elektronik"
+    id: '3', name: 'Tote Bag Canvas 12oz Aesthetic', price: 89000, rating: '4.7',
+    description: 'Canvas tebal 12oz, muat laptop 14 inch. Design minimalis cocok untuk semua outfit casual.',
+    personal_review: 'Udah 6 bulan dipake, ga ada tanda-tanda rusak sama sekali. Kuat banget!',
+    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80',
+    affiliateLink: '#', category: 'Fashion', label: 'Viral',
   },
   {
-    id: 4,
-    name: "Tas Ransel Laptop Anti Air Slim 20L",
-    price: "Rp 175.000",
-    description: "Ransel waterproof dengan kompartemen khusus laptop hingga 15.6 inci. Dilengkapi port USB charging eksternal dan desain ergonomis.",
-    image: "img/redmi-buds.png",
-    affiliateLink: "https://shope.ee/example-tas",
-    category: "Fashion"
+    id: '4', name: 'Skincare Set Niacinamide + Moisturizer', price: 185000, rating: '4.8',
+    description: 'Paket skincare pagi-malam. Niacinamide 10%+Zinc untuk pori-pori, moisturizer non-comedogenic.',
+    personal_review: 'Kulit jadi glowing dalam 2 minggu, minyak berkurang drastis!',
+    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=80',
+    affiliateLink: '#', category: 'Kecantikan', label: 'Terbatas',
   },
   {
-    id: 5,
-    name: "Mechanical Keyboard TKL RGB Wireless",
-    price: "Rp 299.000",
-    description: "Keyboard mekanikal tenkeyless dengan switch blue, backlight RGB 18 mode, koneksi 2.4G wireless dan kabel. Battery 3000mAh.",
-    image: "img/redmi-buds.png",
-    affiliateLink: "https://shope.ee/example-keyboard",
-    category: "Elektronik"
+    id: '5', name: 'Lampu Belajar LED Aesthetic 3 Mode', price: 145000, rating: '4.6',
+    description: 'LED meja 3 mode cahaya, 10 level intensitas, dilengkapi port USB charging di badan lampu.',
+    personal_review: 'Mata ga capek walau belajar sampai subuh. Desainnya bikin meja makin estetik!',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+    affiliateLink: '#', category: 'Elektronik', label: 'Worth It',
   },
   {
-    id: 6,
-    name: "Skincare Set Vitamin C Brightening Serum",
-    price: "Rp 115.000",
-    description: "Serum vitamin C 20% yang membantu mencerahkan kulit, meratakan warna, dan mengurangi bekas jerawat. Formula ringan dan cepat meresap.",
-    image: "img/redmi-buds.png",
-    affiliateLink: "https://shope.ee/example-serum",
-    category: "Skincare"
-  }
+    id: '6', name: 'Parfum Unisex Oud Vanilla EDP 30ml', price: 210000, rating: '4.9',
+    description: 'EDP base note oud kayu, vanilla & musk. Tahan 8-10 jam di kulit, projection balanced.',
+    personal_review: 'Banyak yang nanya pake parfum apa. Selalu dapet compliment kemana-mana!',
+    image: 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=80',
+    affiliateLink: '#', category: 'Kecantikan', label: 'Viral',
+  },
+  {
+    id: '7', name: 'TWS Earphone ANC Noise Cancelling', price: 399000, rating: '4.4',
+    description: 'ANC aktif dengan driver 13mm, latensi 40ms untuk gaming, total battery 30 jam dengan charging case.',
+    personal_review: 'ANC-nya mantap buat kerja di cafe, suara bass nendang. Saingan earphone 2x harganya!',
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80',
+    affiliateLink: '#', category: 'Elektronik', label: 'Best Seller',
+  },
+  {
+    id: '8', name: 'Tumbler Vacuum Stainless 600ml', price: 95000, rating: '4.7',
+    description: 'Double wall vacuum insulation, dingin 24 jam & panas 12 jam. Bebas BPA, anti bocor, anti-slip base.',
+    personal_review: 'Es batu ga mencair seharian penuh! Teman setia ngantor, gym & ngampus.',
+    image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&q=80',
+    affiliateLink: '#', category: 'Lifestyle', label: 'Must Have',
+  },
 ];
 
-/* ================================
-   FETCH PRODUK DARI GOOGLE SHEETS
-================================ */
-async function fetchProductsFromSheet() {
-  // Jika URL belum diisi, pakai data default
-  if (!SHEET_CSV_URL || SHEET_CSV_URL === 'PASTE_LINK_CSV_ANDA_DI_SINI') {
-    console.info('[AFF] Google Sheets belum dikonfigurasi. Menggunakan data default.');
-    return defaultProducts;
-  }
-
-  try {
-    // Coba fetch langsung dulu (tanpa proxy)
-    let response;
-    try {
-      response = await fetch(SHEET_CSV_URL);
-      if (!response.ok) throw new Error('direct failed');
-    } catch (e) {
-      // Jika gagal (CORS), coba via proxy
-      console.info('[AFF] Fetch langsung gagal, mencoba via proxy...');
-      const PROXY = 'https://corsproxy.io/?';
-      response = await fetch(PROXY + encodeURIComponent(SHEET_CSV_URL));
-    }
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const data = await response.text();
-
-    // Parsing CSV – skip baris pertama (header)
-    const rows = data.split('\n').slice(1);
-    const products = rows
-      .map(row => {
-        const cols = parseCSVRow(row);
-        if (!cols || cols.length < 6) return null;
-        return {
-          id:            cols[0]?.trim(),
-          name:          cols[1]?.trim(),
-          price:         cols[2]?.trim(),
-          description:   cols[3]?.trim(),
-          image:         cols[4]?.trim(),
-          affiliateLink: cols[5]?.trim(),
-          category:      cols[6]?.trim() // .trim() otomatis hapus spasi berlebih
-        };
-      })
-      .filter(p => p && p.id); // hanya baris yang ada ID-nya
-
-    if (products.length === 0) {
-      console.warn('[AFF] Sheet kosong atau tidak ada produk valid. Menggunakan data default.');
-      return defaultProducts;
-    }
-
-    console.info('[AFF] Berhasil memuat ' + products.length + ' produk dari Google Sheets.');
-    return products;
-
-  } catch (error) {
-    console.error('[AFF] Gagal mengambil data dari Sheets, menggunakan data default:', error);
-    return defaultProducts;
-  }
-}
-
-/* ================================
-   HELPER: PARSE SATU BARIS CSV
-   Menangani nilai yang mengandung koma
-   di dalam tanda kutip:
-   "Rak, kayu, murah" → satu kolom
-================================ */
-function parseCSVRow(row) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < row.length; i++) {
-    const char = row[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  result.push(current.trim());
-  return result;
-}
-
-/* ================================
-   STATE PRODUK (diisi saat init)
-================================ */
-let allProducts = [];
-
-/* ================================
-   ICONS (inline SVG)
-================================ */
-const icons = {
-  shopee: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
-  box: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
-  spinner: `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`
+// ── STATE ────────────────────────────────────────────────────
+const state = {
+  products:      [],
+  filteredList:  [],
+  filter:        'Semua',
+  search:        '',
+  sort:          'default',
+  page:          1,
+  wishlist:      new Set(),
 };
 
-/* ================================
-   RENDER PRODUCTS
-================================ */
-function renderProducts(filter) {
-  filter = filter || 'Semua';
-  const grid = document.getElementById('product-grid');
-  if (!grid) return;
+// ── UTILS ─────────────────────────────────────────────────────
 
-  const filtered = filter === 'Semua'
-    ? allProducts
-    : allProducts.filter(function(p) { return p.category === filter; });
+/** Shorthand getElementById */
+const $  = id => document.getElementById(id);
 
-  if (filtered.length === 0) {
-    grid.innerHTML =
-      '<div class="empty-state">' + icons.box + '<p>Belum ada produk di kategori ini.</p></div>';
+/**
+ * Format harga dari number atau string mentah → "Rp 150.000"
+ * Handle: 150000 | "150000" | "Rp 150.000" | "150,000"
+ */
+function formatPrice(val) {
+  if (val === null || val === undefined || val === '') return '–';
+  const num = typeof val === 'number' ? val : parseInt(String(val).replace(/[^0-9]/g, ''), 10);
+  if (isNaN(num)) return String(val); // kembalikan apa adanya jika parse gagal
+  return 'Rp\u00A0' + num.toLocaleString('id-ID');
+}
+
+/** Extract angka dari harga */
+function parsePrice(val) {
+  return parseInt(String(val ?? '0').replace(/[^0-9]/g, ''), 10) || 0;
+}
+
+/** Escape HTML – cegah XSS dari data sheet */
+function esc(str) {
+  return (str == null ? '' : String(str))
+    .replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+/** Debounce factory */
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+/** Haptic feedback via Vibration API */
+function haptic(pattern = [30]) {
+  try { if ('vibrate' in navigator) navigator.vibrate(pattern); } catch {}
+}
+
+/**
+ * Tentukan kelas badge berdasarkan teks label.
+ * Urutan pengecekan: dari yang paling spesifik ke umum.
+ */
+function getBadgeClass(label) {
+  const l = (label || '').toLowerCase();
+  if (l.includes('terbatas') || l.includes('limited'))           return 'badge-terbatas';
+  if (l.includes('diskon')   || l.includes('gila') || l.includes('sale')) return 'badge-diskon';
+  if (l.includes('viral')    || l.includes('trending'))          return 'badge-viral';
+  if (l.includes('must')     || l.includes('best') || l.includes('seller')) return 'badge-must';
+  if (l.includes('baru')     || l.includes('new'))               return 'badge-new-item';
+  return 'badge-worth';
+}
+
+// ── DATA FETCHING ─────────────────────────────────────────────
+
+async function initData() {
+  // Tampilkan skeleton dulu
+  renderSkeletons(6);
+
+  try {
+    const controller = new AbortController();
+    const timeout    = setTimeout(() => controller.abort(), 6000);
+
+    const res = await fetch(JSON_API_URL, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const json = await res.json();
+    // Terima format: { products: [...] } | { data: [...] } | [...]
+    const raw  = Array.isArray(json) ? json : (json.products ?? json.data ?? []);
+    state.products = raw.filter(p => p && p.id);
+
+    if (state.products.length === 0) throw new Error('empty response');
+
+  } catch (err) {
+    console.warn('[PilihCerdas] Gagal fetch API, pakai fallback. Alasan:', err.message);
+    state.products = FALLBACK_PRODUCTS;
+  }
+
+  // Update hero stat
+  $('total-products').textContent = state.products.length + '+';
+
+  // Load wishlist dari localStorage
+  loadWishlist();
+  buildUI();
+  handleHashDeepLink();
+}
+
+// ── SKELETON ──────────────────────────────────────────────────
+
+function renderSkeletons(n) {
+  $('product-grid').innerHTML = Array.from({ length: n }, () => `
+    <div class="skeleton-card shimmer-wrap" aria-hidden="true">
+      <div class="sk-img"></div>
+      <div class="sk-body">
+        <div class="sk-line sk-w30 sk-line-sm"></div>
+        <div class="sk-line sk-w80 sk-line-lg"></div>
+        <div class="sk-line sk-w60 sk-line-sm"></div>
+        <div class="sk-line sk-w40 sk-line-sm"></div>
+        <div class="sk-line sk-w60"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── BUILD UI ──────────────────────────────────────────────────
+
+function buildUI() {
+  // Render filter category pills
+  const cats = ['Semua', ...new Set(state.products.map(p => p.category).filter(Boolean))];
+  const pillsEl = $('filter-pills');
+  pillsEl.innerHTML = cats.map(c =>
+    `<button class="pill ${c === state.filter ? 'active' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`
+  ).join('');
+
+  pillsEl.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      haptic([20]);
+      state.filter = btn.dataset.cat;
+      state.page   = 1;
+      buildUI();
+    });
+  });
+
+  renderGrid();
+}
+
+// ── RENDER GRID ───────────────────────────────────────────────
+
+function renderGrid() {
+  // 1. Filter kategori
+  let list = state.filter === 'Semua'
+    ? [...state.products]
+    : state.products.filter(p => p.category === state.filter);
+
+  // 2. Filter pencarian
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    list = list.filter(p =>
+      [p.name, p.description, p.category, p.label, p.personal_review]
+        .some(v => v != null && String(v).toLowerCase().includes(q))
+    );
+  }
+
+  // 3. Sort
+  const sorts = {
+    'price-asc':   (a, b) => parsePrice(a.price) - parsePrice(b.price),
+    'price-desc':  (a, b) => parsePrice(b.price) - parsePrice(a.price),
+    'rating-desc': (a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0),
+    'newest':      (a, b) => String(b.id).localeCompare(String(a.id), undefined, { numeric: true }),
+  };
+  if (sorts[state.sort]) list.sort(sorts[state.sort]);
+
+  state.filteredList = list;
+
+  // 4. Results info
+  $('results-info').textContent = state.search
+    ? `Ketemu ${list.length} racun buat "${state.search}"`
+    : '';
+
+  // 5. Paginasi: tampilkan hanya page pertama
+  const visible   = list.slice(0, state.page * PER_PAGE);
+  const remaining = list.length - visible.length;
+
+  const grid = $('product-grid');
+
+  if (list.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <span>🕵️‍♂️</span>
+        <p>Kosong bosku. Coba kata kunci lain!</p>
+      </div>`;
+    $('load-more-wrap').style.display = 'none';
     return;
   }
 
-  grid.innerHTML = filtered.map(function(p) {
-    return (
-      '<article class="product-card" data-id="' + p.id + '">' +
-        '<div class="card-image-wrap">' +
-          '<img src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.name) + '" loading="lazy"' +
-          ' onerror="this.src=\'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80\'" />' +
-          '<span class="card-badge">&#9733; Worth It</span>' +
-        '</div>' +
-        '<div class="card-body">' +
-          (p.category ? '<span class="card-category">' + escapeHtml(p.category) + '</span>' : '') +
-          '<h3 class="card-name">' + escapeHtml(p.name) + '</h3>' +
-          '<div class="card-price">' + escapeHtml(p.price) + '</div>' +
-          '<p class="card-desc">' + escapeHtml(p.description) + '</p>' +
-          '<a class="card-cta" href="' + escapeHtml(p.affiliateLink) + '" target="_blank" rel="noopener noreferrer">' +
-            icons.shopee + ' Cek di Shopee' +
-          '</a>' +
-        '</div>' +
-      '</article>'
+  grid.innerHTML = visible.map((p, i) => buildCard(p, i)).join('');
+
+  // 6. Load More button
+  const wrap = $('load-more-wrap');
+  if (remaining > 0) {
+    wrap.style.display = 'flex';
+    $('load-more-count').textContent = `+${remaining} produk`;
+  } else {
+    wrap.style.display = 'none';
+  }
+
+  // 7. Setup lazy-loading gambar
+  setupLazyImages();
+
+  // 8. Sinkronisasi status wishlist di semua tombol
+  syncWishlistButtons();
+}
+
+// ── BUILD CARD HTML ───────────────────────────────────────────
+
+function buildCard(p, idx) {
+  const id          = esc(String(p.id));
+  const name        = esc(String(p.name || ''));
+  const price       = formatPrice(p.price);
+  const rating      = esc(String(p.rating || '–'));
+  const desc        = esc(String(p.description || ''));
+  const review      = p.personal_review ? esc(String(p.personal_review)) : '';
+  const link        = esc(String(p.affiliateLink || '#'));
+  const imgSrc      = esc(String(p.image || ''));
+  const label       = esc(String(p.label || 'Worth It'));
+  const badgeClass  = getBadgeClass(p.label);
+  const isWished    = state.wishlist.has(String(p.id));
+  const heartIcon   = isWished ? '❤️' : '🤍';
+  // Staggered animation delay agar kartu muncul berurutan
+  const delay       = Math.min(idx * 55, 450);
+  // Placeholder transparan 1x1 px – gambar asli dimuat via Intersection Observer
+  const placeholder = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+
+  return `
+    <article class="product-card" id="product-${id}" role="listitem" style="animation-delay:${delay}ms">
+
+      <div class="card-img-wrap"
+           onclick="openLightbox('${imgSrc}', '${name}')"
+           title="Klik untuk lihat foto lebih besar">
+        <img
+          class="card-img"
+          data-src="${imgSrc}"
+          src="${placeholder}"
+          alt="${name}"
+          width="600" height="220"
+        >
+        <button
+          class="card-wishlist-btn ${isWished ? 'active' : ''}"
+          data-id="${id}"
+          aria-label="${isWished ? 'Hapus dari' : 'Tambah ke'} wishlist"
+          onclick="event.stopPropagation(); toggleWishlist('${id}')"
+        >${heartIcon}</button>
+      </div>
+
+      <div class="card-content">
+        <div class="card-header">
+          <span class="badge ${badgeClass}">${label}</span>
+          <span class="card-rating">⭐ ${rating}</span>
+        </div>
+
+        <h3 class="product-title">${name}</h3>
+        <p  class="product-desc">${desc}</p>
+
+        ${review ? `<div class="review-box">"${review}"</div>` : ''}
+
+        <div class="product-price">${price}</div>
+
+        <div class="card-actions">
+          <a
+            href="${link}" target="_blank" rel="noopener noreferrer"
+            class="btn btn-primary"
+            onclick="haptic([30])"
+          >🛒 Sikat!</a>
+          <button class="btn btn-icon" title="Share ke WhatsApp"
+            onclick="shareWA('${name}', '${link}', '${esc(price)}')">💬</button>
+          <button class="btn btn-icon" title="Copy link produk"
+            onclick="copyLink('${link}')">🔗</button>
+          <button class="btn btn-icon" title="Share lainnya"
+            onclick="shareNative('${id}', '${name}', '${link}', '${esc(price)}')">📤</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// ── LOAD MORE ─────────────────────────────────────────────────
+
+function loadMore() {
+  haptic([20, 40, 20]);
+  state.page++;
+  renderGrid();
+  // Scroll sedikit ke bawah agar smooth
+  const grid = $('product-grid');
+  const lastCard = grid.querySelector('.product-card:nth-last-child(' + PER_PAGE + ')');
+  if (lastCard) {
+    setTimeout(() => lastCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+}
+
+// ── LAZY LOADING (Intersection Observer) ──────────────────────
+
+let _lazyObserver = null;
+
+function setupLazyImages() {
+  if (_lazyObserver) _lazyObserver.disconnect();
+
+  _lazyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const img = entry.target;
+      const src = img.dataset.src;
+      if (!src) return;
+
+      // Muat gambar asli
+      img.src = src;
+      img.addEventListener('load',  () => img.classList.add('loaded'), { once: true });
+      img.addEventListener('error', () => {
+        img.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80';
+        img.classList.add('loaded');
+      }, { once: true });
+
+      delete img.dataset.src;
+      _lazyObserver.unobserve(img);
+    });
+  }, {
+    rootMargin: '120px 0px',  // mulai load sebelum masuk viewport
+    threshold:  0.01,
+  });
+
+  document.querySelectorAll('.card-img[data-src]').forEach(img => _lazyObserver.observe(img));
+}
+
+// ── WISHLIST ──────────────────────────────────────────────────
+
+function loadWishlist() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
+    state.wishlist = new Set(Array.isArray(saved) ? saved.map(String) : []);
+  } catch {
+    state.wishlist = new Set();
+  }
+  refreshWishlistCount();
+}
+
+function saveWishlist() {
+  try {
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify([...state.wishlist]));
+  } catch { /* localStorage penuh atau disabled */ }
+}
+
+function toggleWishlist(id) {
+  haptic([50]);
+  const sid = String(id);
+
+  if (state.wishlist.has(sid)) {
+    state.wishlist.delete(sid);
+    showToast('Dihapus dari wishlist 💔', 'heart');
+  } else {
+    state.wishlist.add(sid);
+    showToast('Ditambah ke wishlist ❤️', 'heart');
+  }
+
+  saveWishlist();
+  refreshWishlistCount();
+  syncWishlistButtons();
+
+  // Animasi bounce pada tombol yang diklik
+  const btn = document.querySelector(`.card-wishlist-btn[data-id="${CSS.escape(sid)}"]`);
+  if (btn) {
+    btn.innerHTML = state.wishlist.has(sid) ? '❤️' : '🤍';
+    btn.classList.toggle('active', state.wishlist.has(sid));
+    btn.style.transform = 'scale(1.5)';
+    setTimeout(() => { btn.style.transform = ''; }, 220);
+  }
+
+  // Refresh drawer jika sedang terbuka
+  if ($('wishlist-panel').classList.contains('open')) renderWishlistDrawer();
+}
+
+function syncWishlistButtons() {
+  document.querySelectorAll('.card-wishlist-btn').forEach(btn => {
+    const id = String(btn.dataset.id);
+    const wished = state.wishlist.has(id);
+    btn.classList.toggle('active', wished);
+    btn.innerHTML = wished ? '❤️' : '🤍';
+  });
+}
+
+function refreshWishlistCount() {
+  const n     = state.wishlist.size;
+  const badge = $('wishlist-count');
+  badge.textContent  = n;
+  badge.style.display = n > 0 ? 'flex' : 'none';
+}
+
+function openWishlistPanel() {
+  renderWishlistDrawer();
+  $('wishlist-panel').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWishlistPanel() {
+  $('wishlist-panel').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderWishlistDrawer() {
+  const items = state.products.filter(p => state.wishlist.has(String(p.id)));
+  const cont  = $('wishlist-items');
+
+  if (items.length === 0) {
+    cont.innerHTML = `
+      <div class="wishlist-empty">
+        <span>🤍</span>
+        <p>Wishlist kamu masih kosong.<br>Tap ikon hati di produk untuk menyimpan!</p>
+      </div>`;
+    return;
+  }
+
+  cont.innerHTML = items.map(p => `
+    <div class="wishlist-item">
+      <img
+        src="${esc(String(p.image || ''))}"
+        alt="${esc(String(p.name))}"
+        onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=60'"
+        loading="lazy"
+      >
+      <div class="wishlist-item-info">
+        <div class="wishlist-item-name">${esc(String(p.name))}</div>
+        <div class="wishlist-item-price">${formatPrice(p.price)}</div>
+      </div>
+      <button
+        class="wishlist-item-remove"
+        title="Hapus dari wishlist"
+        onclick="toggleWishlist('${esc(String(p.id))}')"
+      >✕</button>
+    </div>
+  `).join('');
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────────────
+
+function openLightbox(src, name) {
+  haptic([15]);
+  if (!src || src === '#') return;
+  $('lightbox-img').src = src;
+  $('lightbox-img').alt = name;
+  $('lightbox-caption').textContent = name;
+  $('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  $('lightbox').classList.remove('open');
+  // Bersihkan src setelah animasi selesai agar tidak flash
+  setTimeout(() => { if (!$('lightbox').classList.contains('open')) $('lightbox-img').src = ''; }, 350);
+  document.body.style.overflow = '';
+}
+
+// ── DEEP LINKING (URL Hash) ───────────────────────────────────
+/*
+  Cara kerja:
+  - Buka domain.com/#5  → langsung scroll ke produk id=5 dan highlight
+  - Buka domain.com/#tumblr → auto-isi search dengan "tumblr"
+*/
+
+function handleHashDeepLink() {
+  const hash = decodeURIComponent(window.location.hash.replace('#', '').trim());
+  if (!hash) return;
+
+  // Coba cari produk dengan ID persis
+  const byId = document.getElementById(`product-${hash}`);
+  if (byId) {
+    setTimeout(() => {
+      byId.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      byId.style.transition = 'box-shadow 0.5s ease';
+      byId.style.boxShadow  = '0 0 0 3px var(--accent), 0 20px 40px var(--accent-glow)';
+      setTimeout(() => { byId.style.boxShadow = ''; }, 3500);
+    }, 500);
+    return;
+  }
+
+  // Coba load more lalu cari lagi
+  const product = state.products.find(p => String(p.id) === hash);
+  if (product) {
+    // Produk ada tapi belum di-render (masih di halaman berikutnya)
+    state.page = Math.ceil(
+      (state.filteredList.findIndex(p => String(p.id) === hash) + 1) / PER_PAGE
     );
-  }).join('');
+    renderGrid();
+    setTimeout(() => handleHashDeepLink(), 300);
+    return;
+  }
+
+  // Fallback: jadikan hash sebagai query pencarian
+  state.search          = hash;
+  $('search-input').value = hash;
+  $('clear-search').style.display = 'block';
+  state.page            = 1;
+  renderGrid();
 }
 
-/* ================================
-   TAMPILKAN LOADING STATE
-================================ */
-function showLoadingState() {
-  const grid = document.getElementById('product-grid');
-  if (!grid) return;
-  grid.innerHTML =
-    '<div class="empty-state">' + icons.spinner + '<p>Memuat produk...</p></div>';
+// ── SHARE ─────────────────────────────────────────────────────
+
+function shareWA(name, link, price) {
+  haptic([30]);
+  const msg = [
+    `🔥 *Racun parah, jangan dibuka kalau ga mau beli!*`,
+    ``,
+    `*${name}*`,
+    `💰 ${price}`,
+    ``,
+    `🛒 Sikat langsung: ${link}`,
+    ``,
+    `✨ Temukan rekomendasi lainnya di *PilihCerdas by Xnovaa*`,
+  ].join('\n');
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
 }
 
-/* ================================
-   FILTER PILLS
-================================ */
-function buildFilters() {
-  const container = document.getElementById('filter-pills');
-  if (!container) return;
+/**
+ * Share native (Web Share API) — fallback ke copy link produk + hash.
+ * Hash URL memungkinkan penerima langsung scroll ke produk tersebut.
+ */
+function shareNative(id, name, link, price) {
+  haptic([20]);
+  const deepLink = `${window.location.origin}${window.location.pathname}#${id}`;
+  const shareData = {
+    title: `${name} — PilihCerdas`,
+    text:  `Cek ini: ${name} | ${price} 🔥`,
+    url:   deepLink,
+  };
 
-  const categories = ['Semua'].concat(
-    Array.from(new Set(allProducts.map(function(p) { return p.category; }).filter(Boolean)))
-  );
-
-  container.innerHTML = categories.map(function(cat, i) {
-    return '<button class="pill ' + (i === 0 ? 'active' : '') + '" data-cat="' + escapeHtml(cat) + '">' + escapeHtml(cat) + '</button>';
-  }).join('');
-
-  container.addEventListener('click', function(e) {
-    const pill = e.target.closest('.pill');
-    if (!pill) return;
-    container.querySelectorAll('.pill').forEach(function(p) { p.classList.remove('active'); });
-    pill.classList.add('active');
-    renderProducts(pill.dataset.cat);
-  });
+  if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+    navigator.share(shareData).catch(err => {
+      if (err.name !== 'AbortError') copyLink(deepLink);
+    });
+  } else {
+    copyLink(deepLink);
+  }
 }
 
-/* ================================
-   HERO CTA – SMOOTH SCROLL
-================================ */
-function initHeroCta() {
-  const btn = document.getElementById('hero-cta');
-  if (!btn) return;
-  btn.addEventListener('click', function() {
-    const el = document.getElementById('products');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  });
+function copyLink(link) {
+  haptic([20]);
+  const fallback = () => {
+    try {
+      const ta  = document.createElement('textarea');
+      ta.value  = link;
+      ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Link disalin ke clipboard! 🔗', 'success');
+    } catch { showToast('Gagal menyalin link 😢', 'info'); }
+  };
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link)
+      .then(()  => showToast('Link disalin ke clipboard! 🔗', 'success'))
+      .catch(()  => fallback());
+  } else {
+    fallback();
+  }
 }
 
-/* ================================
-   DARK MODE TOGGLE
-================================ */
-function initDarkMode() {
-  const toggle = document.getElementById('theme-toggle');
-  if (!toggle) return;
+// ── TOAST ─────────────────────────────────────────────────────
 
-  const saved = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = saved ? saved === 'dark' : prefersDark;
+let _toastTimer = null;
 
-  if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
-  updateToggleIcon(toggle, isDark);
-
-  toggle.addEventListener('click', function() {
-    const current = document.documentElement.getAttribute('data-theme') === 'dark';
-    const next = !current;
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
-    localStorage.setItem('theme', next ? 'dark' : 'light');
-    updateToggleIcon(toggle, next);
-  });
+function showToast(msg, type = 'info') {
+  const el   = $('toast');
+  el.textContent = msg;
+  el.className   = `toast toast-${type} show`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-function updateToggleIcon(btn, isDark) {
-  btn.innerHTML = isDark
-    ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
-    : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-}
+// ── EVENT LISTENERS ───────────────────────────────────────────
 
-/* ================================
-   PRELOADER
-================================ */
-function initPreloader() {
-  const preloader = document.getElementById('preloader');
-  if (!preloader) return;
+// Search dengan debounce 300ms
+const onSearch = debounce(val => {
+  state.search = val;
+  state.page   = 1;
+  renderGrid();
+}, SEARCH_DELAY);
 
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      preloader.classList.add('hide');
-      preloader.addEventListener('transitionend', function() { preloader.remove(); }, { once: true });
-    }, 1800);
-  });
-}
+$('search-input').addEventListener('input', e => {
+  const val = e.target.value;
+  $('clear-search').style.display = val ? 'block' : 'none';
+  onSearch(val);
+});
 
-/* ================================
-   HELPER: ESCAPE HTML
-================================ */
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+$('clear-search').addEventListener('click', () => {
+  $('search-input').value = '';
+  $('clear-search').style.display = 'none';
+  state.search = '';
+  state.page   = 1;
+  renderGrid();
+  $('search-input').focus();
+  // Hapus hash dari URL jika ada
+  history.replaceState(null, '', window.location.pathname);
+});
 
-/* ================================
-   CSS TAMBAHAN – SPINNER ANIMASI
-================================ */
-(function() {
-  const style = document.createElement('style');
-  style.textContent = '@keyframes spin{to{transform:rotate(360deg)}} .spinner-icon{animation:spin 1s linear infinite;opacity:.6}';
-  document.head.appendChild(style);
-})();
+$('sort-select').addEventListener('change', e => {
+  state.sort = e.target.value;
+  state.page = 1;
+  renderGrid();
+});
 
-/* ================================
-   INIT (async – tunggu data Sheet)
-================================ */
-document.addEventListener('DOMContentLoaded', async function() {
-  if (document.body.classList.contains('index-page')) {
-    initDarkMode();
-    initPreloader();
-    initHeroCta();
+$('theme-btn').addEventListener('click', () => {
+  haptic([20]);
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+});
 
-    // Tampilkan animasi loading sementara fetch berjalan
-    showLoadingState();
+$('wishlist-btn').addEventListener('click', () => {
+  haptic([30]);
+  openWishlistPanel();
+});
 
-    // Ambil produk (dari Google Sheets atau fallback default)
-    allProducts = await fetchProductsFromSheet();
+$('close-wishlist').addEventListener('click', closeWishlistPanel);
+$('wishlist-overlay').addEventListener('click', closeWishlistPanel);
 
-    // Render setelah data siap
-    buildFilters();
-    renderProducts();
+$('load-more-btn').addEventListener('click', loadMore);
 
-    // Update counter jumlah produk
-    const el = document.getElementById('stat-products');
-    if (el) el.textContent = allProducts.length;
+$('lightbox-close').addEventListener('click', closeLightbox);
+$('lightbox-overlay').addEventListener('click', closeLightbox);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeLightbox(); closeWishlistPanel(); }
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    $('search-input').focus();
   }
 });
+
+window.addEventListener('hashchange', handleHashDeepLink);
+
+// Expose ke global scope (dipanggil dari onclick di HTML)
+window.haptic       = haptic;
+window.openLightbox = openLightbox;
+window.toggleWishlist = toggleWishlist;
+window.shareWA      = shareWA;
+window.shareNative  = shareNative;
+window.copyLink     = copyLink;
+
+// ── BOOT ──────────────────────────────────────────────────────
+initData();

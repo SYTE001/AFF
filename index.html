@@ -1,140 +1,139 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PilihCerdas – Rekomendasi Produk Terbaik</title>
-  <meta name="description" content="Kurasi produk viral & affordable yang sudah diseleksi berdasarkan rating, value, dan kualitas terbaik." />
+  <title>PilihCerdas by Xnovaa – Curated Goodies</title>
+  <meta name="description" content="Kurasi produk viral & affordable kualitas terbaik. No endorse abal-abal." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="index-page">
+<body>
 
-  <!-- PRELOADER -->
-  <div id="preloader" class="preloader">
-    <div class="preloader-inner">
-      <div class="preloader-logo">Pilih<span>Cerdas</span></div>
-      <div class="preloader-tag">BEST CHOICE</div>
-      <div class="preloader-bar"><div class="preloader-fill"></div></div>
-    </div>
+  <!-- ── Animated Mesh Background ─────── -->
+  <div class="mesh-bg" aria-hidden="true">
+    <div class="mesh-blob blob-1"></div>
+    <div class="mesh-blob blob-2"></div>
+    <div class="mesh-blob blob-3"></div>
+    <div class="mesh-noise"></div>
   </div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="navbar-inner">
-      <div class="nav-logo">Pilih<span>Cerdas</span></div>
-      <div class="nav-right">
-        <ul class="nav-links">
-          <li><a href="#products">Produk</a></li>
-          <li><a href="#about">Tentang</a></li>
-        </ul>
-        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+  <!-- ── Navigation ───────────────────── -->
+  <nav class="glass-nav" role="navigation">
+    <div class="nav-content">
+      <div class="logo">Pilih<span>Cerdas.</span></div>
+      <div class="nav-actions">
+        <button id="wishlist-btn" class="nav-btn" aria-label="Buka Wishlist">
+          ❤️
+          <span id="wishlist-count" class="wishlist-badge" style="display:none">0</span>
+        </button>
+        <button id="theme-btn" class="nav-btn" aria-label="Ganti Tema">🌓</button>
       </div>
     </div>
   </nav>
 
-  <!-- HERO SECTION -->
-  <section class="hero">
+  <!-- ── Hero ─────────────────────────── -->
+  <header class="hero">
     <div class="hero-inner">
-      <div class="hero-badge">
-        <span class="dot"></span>
-        Diperbarui setiap minggu
-      </div>
-
-      <h1>Rekomendasi Barang Viral &amp; Affordable yang <em>Worth It</em></h1>
-
-      <p class="hero-sub">
-        Semua produk sudah dikurasi berdasarkan rating tinggi, ulasan pembeli nyata, dan nilai terbaik untuk uang Anda.
-      </p>
-
-      <button class="hero-cta" id="hero-cta">
-        Lihat Rekomendasi
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"/>
-          <polyline points="19 12 12 19 5 12"/>
-        </svg>
-      </button>
-
+      <div class="badge-pill">✨ Diperbarui setiap minggu</div>
+      <h1>Belanja Cerdas,<br><span class="gradient-text">Nggak Pake Nyesel.</span></h1>
+      <p>Rekomendasi barang viral &amp; worth it hasil kurasi murni.<br>No endorse abal-abal, murni <em>racun</em> berkualitas.</p>
       <div class="hero-stats">
         <div class="stat">
-          <div class="stat-num" id="stat-products">6</div>
-          <div class="stat-label">Produk Pilihan</div>
+          <strong id="total-products">—</strong>
+          <span>Produk Kurasi</span>
         </div>
+        <div class="stat-divider"></div>
         <div class="stat">
-          <div class="stat-num">4.7★</div>
-          <div class="stat-label">Rata-rata Rating</div>
+          <strong>100%</strong>
+          <span>Tested &amp; Legit</span>
         </div>
+        <div class="stat-divider"></div>
         <div class="stat">
-          <div class="stat-num">100%</div>
-          <div class="stat-label">Sudah Diverifikasi</div>
+          <strong>Weekly</strong>
+          <span>Update Rutin</span>
         </div>
       </div>
     </div>
-  </section>
+  </header>
 
-  <!-- PRODUCTS SECTION -->
-  <section id="products" class="products-section">
-    <div class="section-header">
-      <span class="section-tag">Produk Pilihan</span>
-      <h2 class="section-title">Semua Worth It, Harga Bersahabat</h2>
-      <p class="section-desc">Klik "Cek di Shopee" untuk melihat harga real-time dan promo hari ini.</p>
-    </div>
+  <!-- ── Main App ──────────────────────── -->
+  <main class="app-container">
 
-    <div class="filter-pills" id="filter-pills">
-      <!-- Rendered by JS -->
-    </div>
-
-    <div class="product-grid" id="product-grid">
-      <!-- Rendered by JS -->
-    </div>
-  </section>
-
-  <!-- ABOUT SECTION -->
-  <section id="about" class="about-section">
-    <div class="about-inner">
-      <div class="about-icon">🎯</div>
-      <h2>Kenapa Percaya Kami?</h2>
-      <p>
-        <strong>PilihCerdas</strong> bukan marketplace, bukan blog biasa. Kami hanya berbagi produk yang benar-benar kami nilai layak dibeli — berdasarkan rating tinggi, ulasan organik dari pembeli nyata, dan perbandingan harga terbaik di Shopee. Tidak ada produk bayaran, tidak ada endorse asal-asalan. Hanya rekomendasi jujur yang membantu Anda belanja lebih cerdas.
-      </p>
-
-      <div class="about-features">
-        <div class="about-feat">
-          <span class="icon">✅</span>
-          Rating di atas 4.5
-        </div>
-        <div class="about-feat">
-          <span class="icon">💰</span>
-          Harga terjangkau
-        </div>
-        <div class="about-feat">
-          <span class="icon">🔍</span>
-          Dikurasi manual
-        </div>
-        <div class="about-feat">
-          <span class="icon">🛡️</span>
-          No spam, no ads
-        </div>
+    <!-- Toolbar -->
+    <div class="toolbar glass-panel">
+      <div class="search-box">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Cari racun hari ini…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Cari produk"
+        />
+        <button class="clear-search" id="clear-search" style="display:none" aria-label="Hapus pencarian">✕</button>
+      </div>
+      <div class="filters-scroll" role="group" aria-label="Filter kategori">
+        <div id="filter-pills" class="pills-container"></div>
+      </div>
+      <div class="sort-box">
+        <select id="sort-select" aria-label="Urutkan produk">
+          <option value="default">✨ Paling Relevan</option>
+          <option value="price-asc">💸 Harga Termurah</option>
+          <option value="price-desc">💎 Harga Termahal</option>
+          <option value="rating-desc">⭐ Rating Tertinggi</option>
+          <option value="newest">🔥 Terbaru</option>
+        </select>
       </div>
     </div>
-  </section>
 
-  <!-- FOOTER -->
+    <div id="results-info" class="results-info" aria-live="polite"></div>
+
+    <!-- Product Grid -->
+    <div id="product-grid" class="bento-grid" role="list" aria-label="Daftar produk"></div>
+
+    <!-- Load More -->
+    <div id="load-more-wrap" class="load-more-wrap" style="display:none">
+      <button id="load-more-btn" class="btn-load-more">
+        <span>Muat Lebih Banyak</span>
+        <span class="load-more-count" id="load-more-count"></span>
+      </button>
+    </div>
+
+  </main>
+
   <footer>
-    <div class="footer-inner">
-      <div class="footer-logo">Pilih<span>Cerdas</span></div>
-      <p class="footer-disclaimer">
-        Beberapa link di website ini merupakan link affiliate. Saya bisa mendapatkan komisi tanpa biaya tambahan untuk Anda.
-      </p>
-      <div class="footer-divider"></div>
-      <div class="footer-contact">
-        Ada pertanyaan? Hubungi kami di <a href="mailto:xnovaav@gmail.com">xnovaav@gmail.com</a>
-      </div>
-      <div class="footer-divider"></div>
-      <div class="footer-copy">© 2024 PilihCerdas. Dibuat dengan ❤️ untuk belanja lebih cerdas.</div>
-    </div>
+    <p>© 2024 PilihCerdas by Xnovaa &mdash; Belanja cerdas, dompet aman 💸</p>
   </footer>
 
-  <script src="script.js"></script>
+  <!-- ── Image Lightbox ────────────────── -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Preview gambar produk">
+    <div class="lightbox-overlay" id="lightbox-overlay"></div>
+    <div class="lightbox-container">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Tutup preview">✕</button>
+      <img id="lightbox-img" src="" alt="" class="lightbox-image">
+      <p id="lightbox-caption" class="lightbox-caption"></p>
+    </div>
+  </div>
 
+  <!-- ── Wishlist Drawer ───────────────── -->
+  <div id="wishlist-panel" class="wishlist-panel" role="dialog" aria-modal="true" aria-label="Wishlist saya">
+    <div class="wishlist-overlay" id="wishlist-overlay"></div>
+    <div class="wishlist-drawer">
+      <div class="wishlist-header">
+        <h2>❤️ Wishlist Kamu</h2>
+        <button id="close-wishlist" aria-label="Tutup wishlist">✕</button>
+      </div>
+      <div id="wishlist-items" class="wishlist-items"></div>
+    </div>
+  </div>
+
+  <!-- ── Toast Notification ────────────── -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
 </body>
 </html>
