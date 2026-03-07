@@ -7,7 +7,7 @@
 'use strict';
 
 // ── CONFIG ──────────────────────────────────────────────────
-const JSON_API_URL  = 'GANTI_DENGAN_URL_APPS_SCRIPT_KAMU';
+const JSON_API_URL  = 'https://script.google.com/macros/s/AKfycbxFOKpW1biCWYNm8S6Tga7BdKojCSLTkdpnAoCKdm-g4S6zhxKpYXgJraNrt2pKM7-NXQ/exec';
 const PER_PAGE      = 12;
 const SEARCH_DELAY  = 300;
 const WISHLIST_KEY  = 'pilihcerdas_wishlist_v2';
