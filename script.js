@@ -227,8 +227,8 @@ function renderGrid() {
   if (state.search) {
     const q = state.search.toLowerCase();
     list = list.filter(p =>
-      [p.name, p.description, p.category, p.label, p.personal_review]
-        .some(v => v != null && String(v).toLowerCase().includes(q))
+[p.name, p.description, p.category, p.label, p.personal_review, p.code]
+  .some(v => v != null && String(v).toLowerCase().includes(q))
     );
   }
 
