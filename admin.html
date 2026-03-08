@@ -552,6 +552,11 @@
           </div>
 
           <div class="form-group">
+            <label>Kode Produk <span class="req">*</span></label>
+            <input type="text" id="f-code" placeholder="001" maxlength="10" />
+          </div>
+
+          <div class="form-group">
             <label>Kategori <span class="req">*</span></label>
             <input type="text" id="f-category" placeholder="Fashion / Elektronik / ..." list="cat-list" />
             <datalist id="cat-list"></datalist>
@@ -670,6 +675,7 @@
               <tr>
                 <th>Foto</th>
                 <th>Produk</th>
+                <th>Kode</th>
                 <th>Kategori</th>
                 <th>Label</th>
                 <th>Harga</th>
@@ -679,7 +685,7 @@
             </thead>
             <tbody id="table-body">
               <tr class="empty-row">
-                <td colspan="7"><div class="spinner"></div> Memuat data…</td>
+                <td colspan="8"><div class="spinner"></div> Memuat data…</td>
               </tr>
             </tbody>
           </table>
@@ -808,7 +814,7 @@
       buildCatList();
       renderTable();
     } catch (err) {
-      $('table-body').innerHTML = `<tr class="empty-row"><td colspan="7">❌ Gagal memuat data. Cek URL API & koneksi.</td></tr>`;
+      $('table-body').innerHTML = `<tr class="empty-row"><td colspan="8">❌ Gagal memuat data. Cek URL API & koneksi.</td></tr>`;
       showToast('Gagal memuat data dari spreadsheet', 'error');
     }
   }
@@ -856,7 +862,7 @@
     }
 
     if (list.length === 0) {
-      $('table-body').innerHTML = `<tr class="empty-row"><td colspan="7">🕵️‍♂️ Tidak ada produk ditemukan.</td></tr>`;
+      $('table-body').innerHTML = `<tr class="empty-row"><td colspan="8">🕵️‍♂️ Tidak ada produk ditemukan.</td></tr>`;
       return;
     }
 
@@ -874,6 +880,7 @@
             ${esc(String(p.name || '—'))}
             <small>ID: ${id}</small>
           </td>
+          <td><strong style="font-family:monospace;color:var(--accent)">${esc(String(p.code || '—'))}</strong></td>
           <td>${esc(String(p.category || '—'))}</td>
           <td><span class="badge ${badgeClass}">${esc(String(p.label || 'Worth It'))}</span></td>
           <td class="td-price">${formatPrice(p.price)}</td>
@@ -895,6 +902,7 @@
   function getFormData() {
     return {
       id:            $('f-id').value.trim(),
+      code:          $('f-code').value.trim(),
       name:          $('f-name').value.trim(),
       price:         $('f-price').value.trim(),
       rating:        $('f-rating').value.trim(),
@@ -909,6 +917,7 @@
 
   function fillForm(p) {
     $('f-id').value       = p.id || '';
+    $('f-code').value     = p.code || '';
     $('f-name').value     = p.name || '';
     $('f-price').value    = p.price || '';
     $('f-rating').value   = p.rating || '';
@@ -923,7 +932,7 @@
   }
 
   function resetForm() {
-    ['f-id','f-name','f-price','f-rating','f-category','f-image','f-link','f-desc','f-review']
+    ['f-id','f-code','f-name','f-price','f-rating','f-category','f-image','f-link','f-desc','f-review']
       .forEach(id => { $(id).value = ''; });
     $('f-label').value = 'Worth It';
     $('f-id').disabled = false;
