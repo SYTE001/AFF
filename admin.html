@@ -252,26 +252,41 @@
 
     /* ── Image Preview ── */
     .img-preview-wrap {
-      width:100%; aspect-ratio:16/7;
-      border-radius:var(--radius-sm);
-      border:1.5px dashed var(--border-2);
-      overflow:hidden; position:relative;
-      background:var(--bg-2);
-      display:flex; align-items:center; justify-content:center;
+      width: 100%;
+      border-radius: var(--radius-sm);
+      border: 1.5px dashed var(--border-2);
+      overflow: hidden; position: relative;
+      background: var(--bg-2);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 120px;
+    }
+    /* Saat belum ada gambar: tampilkan placeholder dengan tinggi fixed */
+    .img-preview-wrap.empty {
+      aspect-ratio: 16/7;
     }
     .img-preview-wrap img {
-      width:100%; height:100%; object-fit:cover;
-      opacity:0; transition:opacity .3s;
+      width: 100%;
+      height: auto;          /* ← auto-fit tinggi mengikuti rasio gambar asli */
+      display: block;
+      object-fit: contain;   /* ← tidak crop, full gambar terlihat */
+      opacity: 0; transition: opacity .3s;
     }
-    .img-preview-wrap img.loaded { opacity:1; }
+    .img-preview-wrap img.loaded { opacity: 1; }
     .img-placeholder {
-      position:absolute; inset:0;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      gap:8px; color:var(--text-faint); font-size:.85rem;
-      pointer-events:none; transition:opacity .3s;
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; color: var(--text-faint); font-size: .85rem;
+      pointer-events: none; transition: opacity .3s;
     }
-    .img-placeholder span { font-size:2rem; }
+    .img-placeholder span { font-size: 2rem; }
+
+    /* Info ukuran gambar */
+    .img-info {
+      font-size: .74rem; color: var(--text-faint);
+      margin-top: 6px; text-align: center;
+      min-height: 16px;
+    }
 
     /* ── Form Actions ── */
     .form-actions {
@@ -596,13 +611,14 @@
 
           <div class="form-group span-full">
             <label>Preview Gambar</label>
-            <div class="img-preview-wrap">
+            <div class="img-preview-wrap empty" id="img-preview-wrap">
               <img id="img-preview" src="" alt="preview">
               <div class="img-placeholder" id="img-placeholder">
                 <span>🖼️</span>
                 <p>Gambar muncul otomatis setelah URL diisi</p>
               </div>
             </div>
+            <div class="img-info" id="img-info"></div>
           </div>
 
           <div class="form-group span-full">
@@ -1042,13 +1058,29 @@
   function updateImgPreview(url) {
     const img  = $('img-preview');
     const ph   = $('img-placeholder');
+    const wrap = $('img-preview-wrap');
+    const info = $('img-info');
+
     if (url) {
       img.src = url;
-      img.onload  = () => { img.classList.add('loaded'); ph.style.opacity = '0'; };
-      img.onerror = () => { img.classList.remove('loaded'); ph.style.opacity = '1'; };
+      img.onload  = () => {
+        img.classList.add('loaded');
+        ph.style.opacity = '0';
+        wrap.classList.remove('empty');
+        if (info) info.textContent = `${img.naturalWidth} × ${img.naturalHeight}px`;
+      };
+      img.onerror = () => {
+        img.classList.remove('loaded');
+        ph.style.opacity = '1';
+        wrap.classList.add('empty');
+        if (info) info.textContent = '⚠️ URL gambar tidak valid atau tidak bisa dimuat';
+      };
     } else {
-      img.src = ''; img.className = 'loaded' in img ? '' : img.className.replace('loaded','');
+      img.src = '';
+      img.classList.remove('loaded');
       ph.style.opacity = '1';
+      wrap.classList.add('empty');
+      if (info) info.textContent = '';
     }
   }
 
