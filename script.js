@@ -166,7 +166,10 @@ async function initData() {
 }
 
 function afterLoad() {
-  $('total-products').textContent = state.products.length + '+';
+  // Update total produk chip di hero
+  const chipTotal = document.getElementById('chip-total');
+  if (chipTotal) chipTotal.textContent = state.products.length + ' Produk';
+
 
   // FIX: tampilkan banner jika pakai fallback (hanya di development/localhost)
   if (state.usingFallback && location.hostname === 'localhost') {
@@ -305,20 +308,31 @@ function buildCard(p, idx) {
           data-src="${imgSrc}"
           src="${placeholder}"
           alt="${name}"
-          width="600" height="220"
+          width="600" height="400"
         >
         <button
           class="card-wishlist-btn ${isWished ? 'active' : ''}"
           data-id="${id}"
           aria-label="${isWished ? 'Hapus dari' : 'Tambah ke'} wishlist"
           onclick="event.stopPropagation(); toggleWishlist('${id}')"
-        >${heartIcon}</button>
+        >
+          ${isWished
+            ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
+            : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
+          }
+        </button>
+        <div class="card-zoom-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+        </div>
       </div>
 
       <div class="card-content">
         <div class="card-header">
           <span class="badge ${badgeClass}">${label}</span>
-          <span class="card-rating">⭐ ${rating}</span>
+          <span class="card-rating">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            ${rating}
+          </span>
         </div>
 
         <h3 class="product-title">${name}</h3>
@@ -333,13 +347,22 @@ function buildCard(p, idx) {
             href="${link}" ${target}
             class="btn btn-primary"
             onclick="haptic([30])"
-          >🛒 Sikat!</a>
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            Sikat!
+          </a>
           <button class="btn btn-icon" title="Share ke WhatsApp"
-            onclick="shareWA('${name}', '${link}', '${esc(price)}')">💬</button>
+            onclick="shareWA('${name}', '${link}', '${esc(price)}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
           <button class="btn btn-icon" title="Copy link produk"
-            onclick="copyLink('${link}')">🔗</button>
+            onclick="copyLink('${link}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          </button>
           <button class="btn btn-icon" title="Share lainnya"
-            onclick="shareNative('${id}', '${name}', '${link}', '${esc(price)}')">📤</button>
+            onclick="shareNative('${id}', '${name}', '${link}', '${esc(price)}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          </button>
         </div>
       </div>
     </article>
@@ -422,7 +445,9 @@ function toggleWishlist(id) {
 
   const btn = document.querySelector(`.card-wishlist-btn[data-id="${CSS.escape(sid)}"]`);
   if (btn) {
-    btn.innerHTML = state.wishlist.has(sid) ? '❤️' : '🤍';
+    const heartFilled = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    const heartEmpty  = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    btn.innerHTML = state.wishlist.has(sid) ? heartFilled : heartEmpty;
     btn.classList.toggle('active', state.wishlist.has(sid));
     btn.style.transform = 'scale(1.5)';
     setTimeout(() => { btn.style.transform = ''; }, 220);
@@ -432,11 +457,13 @@ function toggleWishlist(id) {
 }
 
 function syncWishlistButtons() {
+  const heartFilled = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+  const heartEmpty  = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
   document.querySelectorAll('.card-wishlist-btn').forEach(btn => {
     const id     = String(btn.dataset.id);
     const wished = state.wishlist.has(id);
     btn.classList.toggle('active', wished);
-    btn.innerHTML = wished ? '❤️' : '🤍';
+    btn.innerHTML = wished ? heartFilled : heartEmpty;
   });
 }
 
@@ -618,6 +645,45 @@ function showToast(msg, type = 'info') {
   _toastTimer    = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
+// ── NAV SCROLL BEHAVIOR ──────────────────────────────────────
+(function initNavScroll() {
+  const nav = document.getElementById('main-nav');
+  if (!nav) return;
+  let lastY = 0, ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y > lastY && y > 80) nav.classList.add('nav-hidden');
+        else nav.classList.remove('nav-hidden');
+        nav.classList.toggle('nav-scrolled', y > 20);
+        lastY = y; ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
+// ── BACK TO TOP ───────────────────────────────────────────────
+(function initBackToTop() {
+  const btn = document.getElementById('back-to-top');
+  if (!btn) return;
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+})();
+
+// ── THEME ICON SYNC ───────────────────────────────────────────
+function syncThemeIcons() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const moon = document.getElementById('theme-icon-moon');
+  const sun  = document.getElementById('theme-icon-sun');
+  if (moon) moon.style.display = isDark ? 'block' : 'none';
+  if (sun)  sun.style.display  = isDark ? 'none'  : 'block';
+}
+syncThemeIcons();
+
 // ── EVENT LISTENERS ───────────────────────────────────────────
 const onSearch = debounce(val => {
   state.search = val;
@@ -651,8 +717,8 @@ $('theme-btn').addEventListener('click', () => {
   haptic([20]);
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-  // FIX: simpan preferensi tema ke localStorage
   localStorage.setItem('pilihcerdas_theme', dark ? 'light' : 'dark');
+  syncThemeIcons();
 });
 
 // FIX: restore tema yang tersimpan saat load
