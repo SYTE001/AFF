@@ -26,7 +26,7 @@
   --border-2:        rgba(0, 0, 0, 0.11);
   --shadow:          0 2px 16px rgba(0, 0, 0, 0.06);
   --shadow-lg:       0 16px 48px rgba(0, 0, 0, 0.09);
-  --glass:           blur(20px) saturate(160%);
+  --glass:           blur(12px) saturate(140%); /* was blur(20px) saturate(160%) */
   --radius:          18px;
   --radius-sm:       12px;
   --radius-xs:       8px;
@@ -75,48 +75,59 @@ body {
 .mesh-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  /* Reduced from 100px — biggest perf win */
+  filter: blur(60px);
   will-change: transform;
+  transform: translateZ(0); /* force GPU layer */
 }
 
 .blob-1 {
-  width: 600px; height: 600px;
+  width: 400px; height: 400px; /* was 600px */
   background: radial-gradient(circle at 40% 40%, #ff3b5c 0%, transparent 65%);
-  top: -200px; left: -200px;
-  opacity: 0.22;
-  animation: blob1drift 24s ease-in-out infinite alternate;
+  top: -160px; left: -160px;
+  opacity: 0.18; /* was 0.22 */
+  animation: blob1drift 32s ease-in-out infinite alternate; /* slower = less repaints */
 }
 
 .blob-2 {
-  width: 700px; height: 700px;
+  width: 480px; height: 480px; /* was 700px */
   background: radial-gradient(circle at 60% 60%, #3730a3 0%, transparent 65%);
-  bottom: -260px; right: -220px;
-  opacity: 0.18;
-  animation: blob2drift 30s ease-in-out infinite alternate;
+  bottom: -200px; right: -180px;
+  opacity: 0.14; /* was 0.18 */
+  animation: blob2drift 40s ease-in-out infinite alternate;
 }
 
 .blob-3 {
-  width: 420px; height: 420px;
+  width: 300px; height: 300px; /* was 420px */
   background: radial-gradient(circle at 50% 50%, #d97706 0%, transparent 65%);
   top: 40%; left: 48%;
-  opacity: 0.09;
-  animation: blob3drift 20s ease-in-out infinite alternate;
+  opacity: 0.07; /* was 0.09 */
+  animation: blob3drift 28s ease-in-out infinite alternate;
 }
 
+/* Simplified keyframes — no scale, only translate (cheaper) */
 @keyframes blob1drift {
-  0%   { transform: translate(0px, 0px) scale(1); }
-  50%  { transform: translate(60px, 45px) scale(1.05); }
-  100% { transform: translate(15px, 100px) scale(0.95); }
+  0%   { transform: translate(0px, 0px); }
+  100% { transform: translate(50px, 80px); }
 }
 @keyframes blob2drift {
-  0%   { transform: translate(0px, 0px) scale(1); }
-  50%  { transform: translate(-70px, -55px) scale(1.07); }
-  100% { transform: translate(-120px, -18px) scale(0.92); }
+  0%   { transform: translate(0px, 0px); }
+  100% { transform: translate(-60px, -40px); }
 }
 @keyframes blob3drift {
-  0%   { transform: translate(-50%, -50%) scale(1); }
-  50%  { transform: translate(-45%, -55%) scale(1.15); }
-  100% { transform: translate(-55%, -45%) scale(0.89); }
+  0%   { transform: translate(-50%, -50%); }
+  100% { transform: translate(-44%, -56%); }
+}
+
+/* Mobile: disable blob animation entirely */
+@media (max-width: 768px) {
+  .mesh-blob { animation: none !important; }
+  .blob-3    { display: none; } /* remove least-impactful blob on mobile */
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .mesh-blob { animation: none !important; }
 }
 
 .mesh-noise {
@@ -281,7 +292,6 @@ body {
   display: flex; flex-direction: column; gap: 10px;
   box-shadow: var(--shadow);
 }
-
 .search-box {
   display: flex; align-items: center; gap: 10px;
   background: var(--bg-2);
@@ -453,12 +463,10 @@ body {
   border-radius: var(--radius);
   overflow: hidden;
   display: flex; flex-direction: column;
-  transition:
-    transform   0.3s var(--ease),
-    box-shadow  0.3s ease,
-    border-color 0.3s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
   animation: cardReveal 0.4s ease both;
-  will-change: transform;
+  /* Limit repaint scope to each card */
+  contain: layout style;
 }
 
 @keyframes cardReveal {
@@ -906,10 +914,8 @@ footer p { color: var(--text-dim); font-size: 0.84rem; }
   .hero { padding: calc(var(--nav-h) + 48px) 20px 40px; }
   .hero h1 { font-size: 2.4rem; letter-spacing: -1.5px; }
   .hero p  { font-size: 0.96rem; }
-  .hero-stats { gap: 14px; padding: 13px 18px; }
-  .stat strong { font-size: 1.1rem; }
 
-  /* 2 column grid on mobile — key improvement */
+  /* 2 column grid on mobile */
   .bento-grid  { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
   /* Smaller card content on mobile */
@@ -923,14 +929,55 @@ footer p { color: var(--text-dim); font-size: 0.84rem; }
   .btn-icon { width: 34px; height: 34px; }
 
   .wishlist-drawer { width: 100vw; }
-  .about-inner { gap: 14px; }
+
+  /* ── PERFORMANCE: strip backdrop-filter on mobile ── */
+  /* Only keep it on the nav (most visible) */
+  .glass-panel,
+  .badge-pill,
+  .hero-chip,
+  .wishlist-drawer,
+  .btn-load-more,
+  .back-to-top {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Solid fallback backgrounds so it still looks good without blur */
+  [data-theme="dark"] .glass-panel    { background: rgba(16, 18, 28, 0.95); }
+  [data-theme="dark"] .badge-pill     { background: rgba(16, 18, 28, 0.90); }
+  [data-theme="dark"] .hero-chip      { background: rgba(16, 18, 28, 0.90); }
+  [data-theme="dark"] .wishlist-drawer{ background: #0e1018; }
+  [data-theme="light"] .glass-panel   { background: rgba(255, 255, 255, 0.97); }
+  [data-theme="light"] .badge-pill    { background: rgba(255, 255, 255, 0.95); }
+  [data-theme="light"] .hero-chip     { background: rgba(255, 255, 255, 0.95); }
+
+  /* ── PERFORMANCE: disable hover effects on touch devices ── */
+  .product-card:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--border);
+  }
+  .product-card:hover .card-img { transform: none; }
+  .card-img-wrap:hover::after  { opacity: 0; }
+  .card-img-wrap:hover .card-zoom-icon { opacity: 0; }
+
+  /* ── PERFORMANCE: stop badge pulse animations on mobile ── */
+  .badge-viral,
+  .badge-terbatas {
+    animation: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── PERFORMANCE: stop gradient text animation on mobile ── */
+  .gradient-text {
+    animation: none !important;
+    background-position: 0% center;
+  }
 }
 
 @media (max-width: 480px) {
   .nav-content    { padding: 0 14px; }
   .app-container  { padding: 28px 14px 90px; }
-  .hero-stats     { flex-wrap: wrap; justify-content: center; }
-  .stat-divider   { display: none; }
   .lightbox-close { top: 8px; right: 8px; }
   .trust-inner    { padding: 14px 16px; }
   .trust-item     { padding: 6px 12px; }

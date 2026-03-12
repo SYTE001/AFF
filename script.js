@@ -645,33 +645,29 @@ function showToast(msg, type = 'info') {
   _toastTimer    = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// ── NAV SCROLL BEHAVIOR ──────────────────────────────────────
-(function initNavScroll() {
+// ── SCROLL LISTENERS (combined into one rAF for perf) ────────
+(function initScrollHandlers() {
   const nav = document.getElementById('main-nav');
-  if (!nav) return;
+  const btt = document.getElementById('back-to-top');
   let lastY = 0, ticking = false;
+
   window.addEventListener('scroll', () => {
     if (!ticking) {
       window.requestAnimationFrame(() => {
         const y = window.scrollY;
-        if (y > lastY && y > 80) nav.classList.add('nav-hidden');
-        else nav.classList.remove('nav-hidden');
-        nav.classList.toggle('nav-scrolled', y > 20);
-        lastY = y; ticking = false;
+        if (nav) {
+          nav.classList.toggle('nav-hidden', y > lastY && y > 80);
+          nav.classList.toggle('nav-scrolled', y > 20);
+        }
+        if (btt) btt.classList.toggle('visible', y > 400);
+        lastY = y;
+        ticking = false;
       });
       ticking = true;
     }
   }, { passive: true });
-})();
 
-// ── BACK TO TOP ───────────────────────────────────────────────
-(function initBackToTop() {
-  const btn = document.getElementById('back-to-top');
-  if (!btn) return;
-  window.addEventListener('scroll', () => {
-    btn.classList.toggle('visible', window.scrollY > 400);
-  }, { passive: true });
-  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  if (btt) btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 })();
 
 // ── THEME ICON SYNC ───────────────────────────────────────────
