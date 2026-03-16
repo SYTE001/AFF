@@ -8,9 +8,12 @@
 
 // ── CONFIG ──────────────────────────────────────────────────
 const JSON_API_URL  = 'https://script.google.com/macros/s/AKfycbydoJ5Qt38ZzqiHjSKlYMnz7XQib_KiIfyWk5A55DeGelx6SXDBhqjhKrFc17movju3Sw/exec';
+const JSON_FILE_URL = 'products.json';   // local CMS fallback
 const PER_PAGE      = 12;
 const SEARCH_DELAY  = 300;
 const WISHLIST_KEY  = 'pilihcerdas_wishlist_v2';
+const CLICK_LOG_KEY = 'pc_click_log';
+const THEME_KEY     = 'pilihcerdas_theme';
 
 // ── FALLBACK DATA ────────────────────────────────────────────
 // Ditampilkan HANYA jika API gagal / spreadsheet kosong
@@ -123,15 +126,31 @@ function getBadgeClass(label) {
   return 'badge-worth';
 }
 
+// ── AFFILIATE CLICK TRACKING ─────────────────────────────────
+function trackAffiliateClick(productId, productName, link) {
+  try {
+    const log = JSON.parse(localStorage.getItem(CLICK_LOG_KEY) || '[]');
+    log.push({
+      id: productId,
+      name: productName,
+      link: link,
+      timestamp: new Date().toISOString(),
+    });
+    // Keep max 500 entries to avoid localStorage bloat
+    if (log.length > 500) log.splice(0, log.length - 500);
+    localStorage.setItem(CLICK_LOG_KEY, JSON.stringify(log));
+  } catch { /* localStorage full or unavailable */ }
+}
+
 // ── DATA FETCHING ────────────────────────────────────────────
+// Fallback chain: API → products.json → hardcoded FALLBACK_PRODUCTS
 async function initData() {
   renderSkeletons(6);
 
   // FIX: jangan fetch kalau URL belum diisi
   if (!JSON_API_URL || JSON_API_URL.includes('GANTI_DENGAN')) {
     console.warn('[PilihCerdas] JSON_API_URL belum diisi, pakai fallback.');
-    state.products    = FALLBACK_PRODUCTS;
-    state.usingFallback = true;
+    await tryLocalJSON();
     afterLoad();
     return;
   }
@@ -140,7 +159,6 @@ async function initData() {
     const controller = new AbortController();
     const timeout    = setTimeout(() => controller.abort(), 8000);
 
-    // FIX: tambah cache-busting agar tidak dapat stale response
     const res = await fetch(JSON_API_URL + '?v=' + Date.now(), { signal: controller.signal });
     clearTimeout(timeout);
 
@@ -149,7 +167,6 @@ async function initData() {
     const json = await res.json();
     const raw  = Array.isArray(json) ? json : (json.products ?? json.data ?? []);
 
-    // FIX: filter produk yang benar-benar punya data (bukan baris kosong spreadsheet)
     state.products = raw.filter(p => p && p.id && p.name && String(p.name).trim() !== '');
 
     if (state.products.length === 0) throw new Error('Spreadsheet kosong atau semua baris invalid');
@@ -157,12 +174,30 @@ async function initData() {
     state.usingFallback = false;
 
   } catch (err) {
-    console.warn('[PilihCerdas] Gagal fetch API, pakai fallback. Alasan:', err.message);
-    state.products    = FALLBACK_PRODUCTS;
-    state.usingFallback = true;
+    console.warn('[PilihCerdas] Gagal fetch API, coba products.json. Alasan:', err.message);
+    await tryLocalJSON();
   }
 
   afterLoad();
+}
+
+async function tryLocalJSON() {
+  try {
+    const res  = await fetch(JSON_FILE_URL + '?v=' + Date.now());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const raw  = Array.isArray(json) ? json : (json.products ?? json.data ?? []);
+    state.products = raw.filter(p => p && p.id && p.name && String(p.name).trim() !== '');
+    if (state.products.length > 0) {
+      state.usingFallback = false;
+      console.info('[PilihCerdas] Data dimuat dari products.json');
+      return;
+    }
+  } catch (e) {
+    console.warn('[PilihCerdas] products.json juga gagal:', e.message);
+  }
+  state.products      = FALLBACK_PRODUCTS;
+  state.usingFallback = true;
 }
 
 function afterLoad() {
@@ -346,7 +381,7 @@ function buildCard(p, idx) {
           <a
             href="${link}" ${target}
             class="btn btn-primary"
-            onclick="haptic([30])"
+            onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             Sikat!
@@ -670,7 +705,7 @@ function showToast(msg, type = 'info') {
   if (btt) btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 })();
 
-// ── THEME ICON SYNC ───────────────────────────────────────────
+// ── THEME SYSTEM (sync with OS + manual toggle) ──────────────
 function syncThemeIcons() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const moon = document.getElementById('theme-icon-moon');
@@ -678,7 +713,30 @@ function syncThemeIcons() {
   if (moon) moon.style.display = isDark ? 'block' : 'none';
   if (sun)  sun.style.display  = isDark ? 'none'  : 'block';
 }
-syncThemeIcons();
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  syncThemeIcons();
+}
+
+// On load: use saved preference, or detect system preference
+(function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) {
+    applyTheme(saved);
+  } else {
+    // First visit: sync with OS preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
+})();
+
+// Listen for OS theme changes (only applies if user hasn't manually toggled)
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  if (!localStorage.getItem(THEME_KEY)) {
+    applyTheme(e.matches ? 'dark' : 'light');
+  }
+});
 
 // ── EVENT LISTENERS ───────────────────────────────────────────
 const onSearch = debounce(val => {
@@ -712,16 +770,10 @@ $('sort-select').addEventListener('change', e => {
 $('theme-btn').addEventListener('click', () => {
   haptic([20]);
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
-  localStorage.setItem('pilihcerdas_theme', dark ? 'light' : 'dark');
-  syncThemeIcons();
+  const newTheme = dark ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, newTheme);
+  applyTheme(newTheme);
 });
-
-// FIX: restore tema yang tersimpan saat load
-(function restoreTheme() {
-  const saved = localStorage.getItem('pilihcerdas_theme');
-  if (saved) document.documentElement.setAttribute('data-theme', saved);
-})();
 
 $('wishlist-btn').addEventListener('click', () => {
   haptic([30]);
@@ -745,12 +797,13 @@ document.addEventListener('keydown', e => {
 window.addEventListener('hashchange', handleHashDeepLink);
 
 // Expose ke global scope
-window.haptic         = haptic;
-window.openLightbox   = openLightbox;
-window.toggleWishlist = toggleWishlist;
-window.shareWA        = shareWA;
-window.shareNative    = shareNative;
-window.copyLink       = copyLink;
+window.haptic              = haptic;
+window.openLightbox        = openLightbox;
+window.toggleWishlist      = toggleWishlist;
+window.shareWA             = shareWA;
+window.shareNative         = shareNative;
+window.copyLink            = copyLink;
+window.trackAffiliateClick = trackAffiliateClick;
 
 // ── BOOT ──────────────────────────────────────────────────────
 initData();
