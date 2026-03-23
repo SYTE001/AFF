@@ -334,71 +334,37 @@ function buildCard(p, idx) {
 
   return `
     <article class="product-card" id="product-${id}" role="listitem" style="animation-delay:${delay}ms">
-
-      <div class="card-img-wrap"
-           onclick="openLightbox('${imgSrc}', '${name}')"
-           title="Klik untuk lihat foto lebih besar">
-        <img
-          class="card-img"
-          data-src="${imgSrc}"
-          src="${placeholder}"
-          alt="${name}"
-          width="600" height="400"
-        >
-        <button
-          class="card-wishlist-btn ${isWished ? 'active' : ''}"
-          data-id="${id}"
-          aria-label="${isWished ? 'Hapus dari' : 'Tambah ke'} wishlist"
-          onclick="event.stopPropagation(); toggleWishlist('${id}')"
-        >
-          ${isWished
-            ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
-            : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`
-          }
-        </button>
-        <div class="card-zoom-icon" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      <div class="card-clickable-area" onclick="openDetailModal('${id}')" title="Lihat detail produk">
+        <div class="card-img-wrap">
+          <img
+            class="card-img"
+            data-src="${imgSrc}"
+            src="${placeholder}"
+            alt="${name}"
+            width="600" height="400"
+          >
+          <div class="card-overlay-row">
+            <span class="badge ${badgeClass}">${label}</span>
+            <span class="card-rating-pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFA500"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <span class="card-rating-value">${rating}</span>
+            </span>
+          </div>
+        </div>
+        <div class="card-info">
+          <h3 class="product-title">${name}</h3>
+          <div class="product-price">${price}</div>
         </div>
       </div>
-
-      <div class="card-content">
-        <div class="card-header">
-          <span class="badge ${badgeClass}">${label}</span>
-          <span class="card-rating">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            ${rating}
-          </span>
-        </div>
-
-        <h3 class="product-title">${name}</h3>
-        <p  class="product-desc">${desc}</p>
-
-        ${review ? `<div class="review-box">"${review}"</div>` : ''}
-
-        <div class="product-price">${price}</div>
-
-        <div class="card-actions">
-          <a
-            href="${link}" ${target}
-            class="btn btn-primary"
-            onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            Sikat!
-          </a>
-          <button class="btn btn-icon" title="Share ke WhatsApp"
-            onclick="shareWA('${name}', '${link}', '${esc(price)}')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          </button>
-          <button class="btn btn-icon" title="Copy link produk"
-            onclick="copyLink('${link}')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-          </button>
-          <button class="btn btn-icon" title="Share lainnya"
-            onclick="shareNative('${id}', '${name}', '${link}', '${esc(price)}')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-          </button>
-        </div>
+      <div class="card-btn-wrap">
+        <a
+          href="${link}" ${target}
+          class="btn-shopee"
+          onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zm-9-1a2 2 0 0 1 4 0v1h-4V6zm9 14H5V9h14v11z"/></svg>
+          Beli di Shopee
+        </a>
       </div>
     </article>
   `;
@@ -570,8 +536,95 @@ function closeLightbox() {
   setTimeout(() => {
     if (!$('lightbox').classList.contains('open')) $('lightbox-img').src = '';
   }, 350);
-  document.body.style.overflow = '';
+  if (!$('detail-modal').classList.contains('open') && !$('wishlist-panel').classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
 }
+
+// ── DETAIL MODAL ──────────────────────────────────────────────
+function openDetailModal(id) {
+  haptic([20]);
+  const p = state.products.find(prod => String(prod.id) === String(id));
+  if (!p) return;
+
+  const name       = esc(String(p.name || ''));
+  const price      = formatPrice(p.price);
+  const rating     = esc(String(p.rating || '–'));
+  const desc       = esc(String(p.description || ''));
+  const review     = p.personal_review ? esc(String(p.personal_review)) : '';
+  const link       = esc(String(p.affiliateLink || '#'));
+  const imgSrc     = esc(String(p.image || ''));
+  const label      = esc(String(p.label || 'Worth It'));
+  const badgeClass = getBadgeClass(p.label);
+  const isWished   = state.wishlist.has(String(p.id));
+  const target = (p.affiliateLink && p.affiliateLink !== '#') ? 'target="_blank" rel="noopener noreferrer"' : '';
+
+  const heartFilled = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+  const heartEmpty  = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+
+  $('detail-modal-content').innerHTML = `
+    <div class="dm-image-wrap">
+      <img class="dm-image" src="${imgSrc}" alt="${name}" onerror="this.src='https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80'">
+      <button class="dm-zoom-btn" title="Zoom Gambar" onclick="event.stopPropagation(); openLightbox('${imgSrc}', '${name}')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+      </button>
+      <button class="dm-wishlist-btn card-wishlist-btn ${isWished ? 'active' : ''}" data-id="${id}" onclick="event.stopPropagation(); toggleWishlist('${id}')">
+        ${isWished ? heartFilled : heartEmpty}
+      </button>
+    </div>
+    <div class="dm-info">
+      <div class="dm-header">
+        <span class="badge ${badgeClass}">${label}</span>
+        <span class="card-rating">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          ${rating}
+        </span>
+      </div>
+      <h3 class="dm-title">${name}</h3>
+      <p class="dm-desc">${desc}</p>
+      ${review ? `
+      <div class="testimonial-card dm-review">
+        <svg class="quote-icon quote-left" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/></svg>
+        <div class="testi-content">
+          <div class="testi-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <p class="testi-text">${review}</p>
+        </div>
+        <svg class="quote-icon quote-right" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-4v-10h10z"/></svg>
+      </div>` : ''}
+      <div class="dm-price-action-wrap">
+        <div class="product-price dm-price">${price}</div>
+        <div class="card-actions dm-actions">
+          <a href="${link}" ${target} class="btn btn-primary" onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            Sikat!
+          </a>
+          <button class="btn btn-icon" title="Share ke WhatsApp" onclick="shareWA('${name}', '${link}', '${esc(price)}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+          <button class="btn btn-icon" title="Copy link produk" onclick="copyLink('${link}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          </button>
+          <button class="btn btn-icon" title="Share lainnya" onclick="shareNative('${id}', '${name}', '${link}', '${esc(price)}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $('detail-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+  $('detail-modal').classList.remove('open');
+  if (!$('lightbox').classList.contains('open') && !$('wishlist-panel').classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
+}
+
 
 // ── DEEP LINKING ──────────────────────────────────────────────
 function handleHashDeepLink() {
@@ -785,9 +838,11 @@ $('wishlist-overlay').addEventListener('click', closeWishlistPanel);
 $('load-more-btn').addEventListener('click', loadMore);
 $('lightbox-close').addEventListener('click', closeLightbox);
 $('lightbox-overlay').addEventListener('click', closeLightbox);
+$('detail-modal-close').addEventListener('click', closeDetailModal);
+$('detail-modal-overlay').addEventListener('click', closeDetailModal);
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeLightbox(); closeWishlistPanel(); }
+  if (e.key === 'Escape') { closeLightbox(); closeWishlistPanel(); closeDetailModal(); }
   if (e.key === '/' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault();
     $('search-input').focus();
@@ -799,6 +854,8 @@ window.addEventListener('hashchange', handleHashDeepLink);
 // Expose ke global scope
 window.haptic              = haptic;
 window.openLightbox        = openLightbox;
+window.openDetailModal     = openDetailModal;
+window.closeDetailModal    = closeDetailModal;
 window.toggleWishlist      = toggleWishlist;
 window.shareWA             = shareWA;
 window.shareNative         = shareNative;

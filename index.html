@@ -24,7 +24,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -142,6 +142,17 @@
   <button id="back-to-top" class="back-to-top" aria-label="Kembali ke atas" style="opacity:0;pointer-events:none">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
   </button>
+
+  <!-- ── Detail Modal ──────────────────── -->
+  <div id="detail-modal" class="detail-modal" role="dialog" aria-modal="true" aria-label="Detail Produk">
+    <div class="detail-modal-overlay" id="detail-modal-overlay"></div>
+    <div class="detail-modal-container">
+      <button class="detail-modal-close" id="detail-modal-close" aria-label="Tutup detail">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div id="detail-modal-content" class="detail-modal-content"></div>
+    </div>
+  </div>
 
   <!-- ── Image Lightbox ────────────────── -->
   <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Preview gambar produk">
