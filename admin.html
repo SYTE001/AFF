@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
@@ -507,7 +507,9 @@
     }
 
     $('table-body').innerHTML = list.map(p => {
-      const id = esc(String(p.id));
+      const rawId = String(p.id);
+      const displayId = esc(rawId);
+      const safeId = rawId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const badgeClass = getBadgeClass(p.label);
       return `
         <tr>
@@ -518,7 +520,7 @@
             loading="lazy"></td>
           <td class="td-name">
             ${esc(String(p.name || '—'))}
-            <small>ID: ${id}</small>
+            <small>ID: ${displayId}</small>
           </td>
           <td><strong style="font-family:monospace;color:var(--accent)">${esc(String(p.code || '—'))}</strong></td>
           <td>${esc(String(p.category || '—'))}</td>
@@ -527,8 +529,8 @@
           <td class="td-rating">⭐ ${esc(String(p.rating || '—'))}</td>
           <td>
             <div class="td-actions">
-              <button class="btn btn-success btn-sm" onclick="startEdit('${id}')">✏️ Edit</button>
-              <button class="btn btn-danger btn-sm"  onclick="confirmDelete('${id}')">🗑️</button>
+              <button class="btn btn-success btn-sm" onclick="startEdit('${safeId}')">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm"  onclick="confirmDelete('${safeId}')">🗑️</button>
             </div>
           </td>
         </tr>
@@ -587,9 +589,17 @@
   }
 
   function startEdit(id) {
-    const p = products.find(x => String(x.id) === String(id));
-    if (!p) return;
-    editingId = String(id);
+    console.log('[ADMIN] startEdit called with ID:', id, '| type:', typeof id);
+    const normalizedId = String(id);
+    const p = products.find(x => String(x.id) === normalizedId);
+    console.log('[ADMIN] Found product:', p ? p.name : 'NOT FOUND', '| products count:', products.length);
+    if (!p) {
+      showToast('❌ Produk dengan ID ' + id + ' tidak ditemukan!', 'error');
+      console.error('[ADMIN] Product not found! Available IDs:', products.map(x => x.id));
+      return;
+    }
+    editingId = normalizedId;
+    console.log('[ADMIN] editingId set to:', editingId);
     fillForm(p);
     $('f-id').disabled = true;  // ID tidak boleh diubah saat edit
     $('form-title').innerHTML = '✏️ Edit <span>Produk</span>';
@@ -602,9 +612,17 @@
 
   async function saveProduct() {
     const data = getFormData();
+    console.log('[ADMIN] saveProduct called | editingId:', editingId, '| form data.id:', data.id);
+
     if (!data.id || !data.name || !data.price || !data.image || !data.affiliateLink || !data.description) {
       showToast('⚠️ Isi semua field wajib (*)!', 'error');
       return;
+    }
+
+    // Safety: jika mode edit, pastikan ID form === editingId
+    if (editingId && String(data.id) !== String(editingId)) {
+      console.warn('[ADMIN] ID mismatch! editingId:', editingId, 'form ID:', data.id);
+      data.id = editingId; // force use editingId
     }
 
     const btn = $('btn-save');
@@ -613,14 +631,21 @@
 
     try {
       const action = editingId ? 'update' : 'add';
+      console.log('[ADMIN] API action:', action, '| product ID:', data.id);
       const result = await apiPost(action, { product: data });
+      console.log('[ADMIN] API result:', result);
 
       if (result.status === 'ok' || result.success) {
         const wasEdit = !!editingId;
         // Update local state
         if (editingId) {
-          const idx = products.findIndex(p => String(p.id) === editingId);
-          if (idx >= 0) products[idx] = { ...products[idx], ...data };
+          const idx = products.findIndex(p => String(p.id) === String(editingId));
+          console.log('[ADMIN] Updating local product at index:', idx);
+          if (idx >= 0) {
+            products[idx] = { ...products[idx], ...data };
+          } else {
+            console.error('[ADMIN] Could not find product in local array! editingId:', editingId);
+          }
         } else {
           products.push(data);
         }
@@ -633,6 +658,7 @@
         throw new Error(result.message || 'Unknown error');
       }
     } catch (err) {
+      console.error('[ADMIN] Save error:', err);
       showToast('❌ Gagal menyimpan: ' + err.message, 'error');
     } finally {
       btn.disabled = false;
@@ -645,6 +671,7 @@
   //  DELETE
   // ══════════════════════════════════════════════════════════
   function confirmDelete(id) {
+    console.log('[ADMIN] confirmDelete called with ID:', id);
     const p = products.find(x => String(x.id) === String(id));
     deleteTarget = String(id);
     $('modal-product-name').textContent = p ? `"${p.name}" akan dihapus permanen.` : 'Produk ini akan dihapus.';

@@ -328,7 +328,9 @@ function renderGrid() {
 
 // ── BUILD CARD ────────────────────────────────────────────────
 function buildCard(p, idx) {
-  const id         = esc(String(p.id));
+  const rawId      = String(p.id);
+  const safeId     = rawId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const id         = esc(rawId);
   const name       = esc(String(p.name || ''));
   const price      = formatPrice(p.price);
   const rating     = esc(String(p.rating || '–'));
@@ -338,7 +340,7 @@ function buildCard(p, idx) {
   const imgSrc     = esc(String(p.image || ''));
   const label      = esc(String(p.label || 'Worth It'));
   const badgeClass = getBadgeClass(p.label);
-  const isWished   = state.wishlist.has(String(p.id));
+  const isWished   = state.wishlist.has(rawId);
   const heartIcon  = isWished ? '❤️' : '🤍';
   const delay      = Math.min(idx * 55, 450);
   const placeholder = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
@@ -348,7 +350,7 @@ function buildCard(p, idx) {
 
   return `
     <article class="product-card" id="product-${id}" role="listitem" style="animation-delay:${delay}ms">
-      <div class="card-clickable-area" onclick="openDetailModal('${id}')" title="Lihat detail produk">
+      <div class="card-clickable-area" onclick="openDetailModal('${safeId}')" title="Lihat detail produk">
         <div class="card-img-wrap">
           <img
             class="card-img"
@@ -378,7 +380,7 @@ function buildCard(p, idx) {
         <a
           href="${link}" ${target}
           class="btn-shopee"
-          onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')"
+          onclick="haptic([30]); trackAffiliateClick('${safeId}', '${name}', '${link}')"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
           BELI DI SHOPEE
@@ -562,9 +564,16 @@ function closeLightbox() {
 // ── DETAIL MODAL ──────────────────────────────────────────────
 function openDetailModal(id) {
   haptic([20]);
+  console.log('[FRONTEND] openDetailModal called with ID:', id, '| type:', typeof id);
   const p = state.products.find(prod => String(prod.id) === String(id));
-  if (!p) return;
+  console.log('[FRONTEND] Found product:', p ? p.name : 'NOT FOUND', '| products count:', state.products.length);
+  if (!p) {
+    console.error('[FRONTEND] Product not found! Available IDs:', state.products.map(x => x.id));
+    return;
+  }
 
+  const rawId      = String(p.id);
+  const safeId     = rawId.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const name       = esc(String(p.name || ''));
   const price      = formatPrice(p.price);
   const rating     = esc(String(p.rating || '–'));
@@ -574,7 +583,7 @@ function openDetailModal(id) {
   const imgSrc     = esc(String(p.image || ''));
   const label      = esc(String(p.label || 'Worth It'));
   const badgeClass = getBadgeClass(p.label);
-  const isWished   = state.wishlist.has(String(p.id));
+  const isWished   = state.wishlist.has(rawId);
   const target = (p.affiliateLink && p.affiliateLink !== '#') ? 'target="_blank" rel="noopener noreferrer"' : '';
 
   const heartFilled = `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
@@ -586,7 +595,7 @@ function openDetailModal(id) {
       <button class="dm-zoom-btn" title="Zoom Gambar" onclick="event.stopPropagation(); openLightbox('${imgSrc}', '${name}')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
       </button>
-      <button class="dm-wishlist-btn card-wishlist-btn ${isWished ? 'active' : ''}" data-id="${id}" onclick="event.stopPropagation(); toggleWishlist('${id}')">
+      <button class="dm-wishlist-btn card-wishlist-btn ${isWished ? 'active' : ''}" data-id="${rawId}" onclick="event.stopPropagation(); toggleWishlist('${safeId}')">
         ${isWished ? heartFilled : heartEmpty}
       </button>
     </div>
@@ -617,7 +626,7 @@ function openDetailModal(id) {
       <div class="dm-price-action-wrap">
         <div class="product-price dm-price">${price}</div>
         <div class="card-actions dm-actions">
-          <a href="${link}" ${target} class="btn btn-primary" onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')">
+          <a href="${link}" ${target} class="btn btn-primary" onclick="haptic([30]); trackAffiliateClick('${safeId}', '${name}', '${link}')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             Sikat!
           </a>
