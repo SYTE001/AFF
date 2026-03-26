@@ -218,6 +218,7 @@ function afterLoad() {
   loadWishlist();
   buildUI();
   handleHashDeepLink();
+  handleKodeParam();
 }
 
 // ── SKELETON ─────────────────────────────────────────────────
@@ -290,26 +291,39 @@ function renderGrid() {
 
   if (list.length === 0) {
     grid.innerHTML = `
-      <div class="empty-state">
-        <span>🕵️‍♂️</span>
-        <p>Kosong bosku. Coba kata kunci lain!</p>
+      <div class="empty-state" style="animation: fadeUp 0.3s ease;">
+        <span style="font-size:3rem; margin-bottom:12px; display:inline-block">🕵️‍♂️</span>
+        <p>Kosong bosku. Coba kata lain!</p>
       </div>`;
     $('load-more-wrap').style.display = 'none';
+    $('results-info').textContent = '';
     return;
   }
 
-  grid.innerHTML = visible.map((p, i) => buildCard(p, i)).join('');
+  const applyDom = () => {
+    grid.innerHTML = visible.map((p, i) => buildCard(p, i)).join('');
+    const wrap = $('load-more-wrap');
+    if (remaining > 0) {
+      wrap.style.display = 'flex';
+      $('load-more-count').textContent = `+${remaining} produk`;
+    } else {
+      wrap.style.display = 'none';
+    }
+    setupLazyImages();
+    syncWishlistButtons();
+  };
 
-  const wrap = $('load-more-wrap');
-  if (remaining > 0) {
-    wrap.style.display = 'flex';
-    $('load-more-count').textContent = `+${remaining} produk`;
+  if (typeof window._renderTimer !== 'undefined') clearTimeout(window._renderTimer);
+
+  // Micro-delay + Skeleton ONLY for fresh filter/search (page 1)
+  if (state.page === 1) {
+    renderSkeletons(Math.min(visible.length, 8));
+    $('load-more-wrap').style.display = 'none';
+    window._renderTimer = setTimeout(applyDom, 350);
   } else {
-    wrap.style.display = 'none';
+    // If loading more, render immediately to avoid jumping layout
+    applyDom();
   }
-
-  setupLazyImages();
-  syncWishlistButtons();
 }
 
 // ── BUILD CARD ────────────────────────────────────────────────
@@ -343,15 +357,19 @@ function buildCard(p, idx) {
             alt="${name}"
             width="600" height="400"
           >
-          <div class="card-overlay-row">
+          ${p.code ? `<div class="card-badge-left"><span class="code-badge">${esc(String(p.code))}</span></div>` : ''}
+          <div class="card-badge-center">
             <span class="badge ${badgeClass}">${label}</span>
+          </div>
+          <div class="card-badge-right">
             <span class="card-rating-pill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFA500"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFAF00"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
               <span class="card-rating-value">${rating}</span>
             </span>
           </div>
         </div>
         <div class="card-info">
+          <span class="card-category">${esc(p.category || 'Rekomendasi')}</span>
           <h3 class="product-title">${name}</h3>
           <div class="product-price">${price}</div>
         </div>
@@ -362,8 +380,8 @@ function buildCard(p, idx) {
           class="btn-shopee"
           onclick="haptic([30]); trackAffiliateClick('${id}', '${name}', '${link}')"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zm-9-1a2 2 0 0 1 4 0v1h-4V6zm9 14H5V9h14v11z"/></svg>
-          Beli di Shopee
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          BELI DI SHOPEE
         </a>
       </div>
     </article>
@@ -584,14 +602,17 @@ function openDetailModal(id) {
       <p class="dm-desc">${desc}</p>
       ${review ? `
       <div class="testimonial-card dm-review">
-        <svg class="quote-icon quote-left" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/></svg>
         <div class="testi-content">
-          <div class="testi-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <div class="testi-left">
+            <svg class="quote-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/></svg>
+            <div class="testi-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
           </div>
-          <p class="testi-text">${review}</p>
+          <div class="testi-right">
+            <p class="testi-text"><i>"${review}"</i></p>
+          </div>
         </div>
-        <svg class="quote-icon quote-right" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-4v-10h10z"/></svg>
       </div>` : ''}
       <div class="dm-price-action-wrap">
         <div class="product-price dm-price">${price}</div>
@@ -600,14 +621,8 @@ function openDetailModal(id) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             Sikat!
           </a>
-          <button class="btn btn-icon" title="Share ke WhatsApp" onclick="shareWA('${name}', '${link}', '${esc(price)}')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-          </button>
           <button class="btn btn-icon" title="Copy link produk" onclick="copyLink('${link}')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-          </button>
-          <button class="btn btn-icon" title="Share lainnya" onclick="shareNative('${id}', '${name}', '${link}', '${esc(price)}')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           </button>
         </div>
       </div>
@@ -660,44 +675,38 @@ function handleHashDeepLink() {
   renderGrid();
 }
 
+function handleKodeParam() {
+  const params = new URLSearchParams(window.location.search);
+  const kode = params.get('kode');
+  if (!kode) return;
+
+  const q = kode.trim();
+  if (!q) return;
+
+  state.search = q;
+  const searchInput = $('search-input');
+  if (searchInput) searchInput.value = q;
+  const clearSearch = $('clear-search');
+  if (clearSearch) clearSearch.style.display = 'block';
+
+  state.page = 1;
+  renderGrid();
+
+  setTimeout(() => {
+    const matchedProduct = state.filteredList.find(p => String(p.code || '').toLowerCase() === q.toLowerCase());
+    if (matchedProduct) {
+      const byId = document.getElementById(`product-${matchedProduct.id}`);
+      if (byId) {
+        byId.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        byId.style.transition = 'box-shadow 0.5s ease';
+        byId.style.boxShadow  = '0 0 0 3px var(--accent), 0 20px 40px var(--accent-glow)';
+        setTimeout(() => { byId.style.boxShadow = ''; }, 3500);
+      }
+    }
+  }, 500);
+}
+
 // ── SHARE ─────────────────────────────────────────────────────
-function shareWA(name, link, price) {
-  haptic([30]);
-  // FIX: jangan share link '#'
-  const finalLink = (!link || link === '#')
-    ? window.location.href
-    : link;
-  const msg = [
-    `🔥 *Racun parah, jangan dibuka kalau ga mau beli!*`,
-    ``,
-    `*${name}*`,
-    `💰 ${price}`,
-    ``,
-    `🛒 Sikat langsung: ${finalLink}`,
-    ``,
-    `✨ Temukan rekomendasi lainnya di *PilihCerdas by Xnovaa*`,
-  ].join('\n');
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
-}
-
-function shareNative(id, name, link, price) {
-  haptic([20]);
-  const deepLink  = `${window.location.origin}${window.location.pathname}#${id}`;
-  const shareData = {
-    title: `${name} — PilihCerdas`,
-    text:  `Cek ini: ${name} | ${price} 🔥`,
-    url:   deepLink,
-  };
-
-  if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-    navigator.share(shareData).catch(err => {
-      if (err.name !== 'AbortError') copyLink(deepLink);
-    });
-  } else {
-    copyLink(deepLink);
-  }
-}
-
 function copyLink(link) {
   haptic([20]);
   const fallback = () => {
@@ -857,8 +866,6 @@ window.openLightbox        = openLightbox;
 window.openDetailModal     = openDetailModal;
 window.closeDetailModal    = closeDetailModal;
 window.toggleWishlist      = toggleWishlist;
-window.shareWA             = shareWA;
-window.shareNative         = shareNative;
 window.copyLink            = copyLink;
 window.trackAffiliateClick = trackAffiliateClick;
 
